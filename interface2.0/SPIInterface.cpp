@@ -46,7 +46,9 @@ void SPIInterface::setRec(char value){
 
 // SPI interrupt routine
 ISR (SPI_STC_vect){
-  SPDR = 0x12;
+  byte value = SPDR, newValue = 0x12;
+
+  SPDR = newValue;
   //if(objPtr!=NULL)
     //objPtr->sendBack(0x11);
 }
