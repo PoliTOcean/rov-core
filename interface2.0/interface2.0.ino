@@ -1,29 +1,34 @@
-#include "SPIInterface.h"
-#include "FakeSensor.h"
 
-SPIInterface interface;
-FakeSensor sensor;
+#include "SPIInterface.h"
+//#include <SPI.h>
+
+volatile int i;
+volatile byte r;
+volatile boolean process;
+
+volatile SPIInterface interface;
 
 void setup() {
-  // put your setup code here, to run once:
+
   Serial.begin(9600);
-  Serial.println("Restart ATMega...");
-
-  Serial.println("Configure SPI...");
+  Serial.println("Reboot...");
+  
+  Serial.println("Configure spi library...");
   interface.configure();
-
-  Serial.println("Configure FakeSensor...");
-  sensor.configure();
-
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:-
+  // put your main code here, to run repeatedly:
+  if (interface.getProcess()) {
+    Serial.println(interface.getR());
+    interface.setProcess(false);
+  }
 }
-/*
-// SPI interrupt routine
+
 ISR (SPI_STC_vect)
 {
-  if(objPtr!=NULL && sensorPtr!=NULL)
-    objPtr->sendBack(sensorPtr->getValue());
-}*/
+  interface.setR(SPDR);
+  interface.setProcess(true);
+  SPDR = interface.getI()+1; 
+  interface.setI(interface.getI()+1);
+}

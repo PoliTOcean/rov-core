@@ -1,52 +1,41 @@
 #include "SPIInterface.h"
 #include "Arduino.h"
-
-
-volatile SPIInterface *objPtr = NULL;
+#include <SPI.h>
 
 void SPIInterface::configure(){  
-  if(objPtr!=NULL)
-    return;
-    
-  cli();
-  SPCR = 0b11000000;
-  sei();
+  pinMode(MISO, OUTPUT);
+  SPCR |= _BV(SPE);
 
-  flag_reset = true;
+  // Setup SPDR to send 0xFF
+  SPDR = 0xFF;
 
-  objPtr = this;
+  // Setup starting number to 0
+  i = 0;
+  process = false;
+
+  SPI.attachInterrupt();
 }
 
-void SPIInterface::sendBack(char value){
-  
-    rec = SPDR;        // load the recieved value
-    
-    if(flag_reset){
-      // set the value that has to be sended
-      sen = SPDR;
-      // send back the value
-      SPDR = sen;              
-      flag_reset = false;
-    }else{
-      // set the value that has to be sended
-      sen = 0x11;  
-      // send back the value      
-      SPDR = sen; 
-      flag_reset = false;       
-    }
+int SPIInterface::getI(){
+  return i;
 }
 
-void SPIInterface::setSen(char value){
-  sen = value;
+void SPIInterface::setI(int value){
+  i = value;
 }
 
-void SPIInterface::setRec(char value){
-  rec = value;
+byte SPIInterface::getR(){
+  return r;
 }
 
-// SPI interrupt routine
-ISR (SPI_STC_vect){
-  SPDR = 0x12;
-  //if(objPtr!=NULL)
-    //objPtr->sendBack(0x11);
+void SPIInterface::setR(byte value){
+  r = value;
+}
+
+boolean SPIInterface::getProcess(){
+  return process;
+}
+
+void SPIInterface::setProcess(boolean value){
+  process = value;
 }
