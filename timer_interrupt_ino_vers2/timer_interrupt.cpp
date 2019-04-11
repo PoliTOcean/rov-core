@@ -1,4 +1,5 @@
 #include "DumpedCurrentMotor_test2_ino.h"
+#include "Servo.h"
 #include "Arduino.h"
 
 /*
@@ -9,7 +10,7 @@
 Motor* vect[7]= {NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 int i = 0;
 int t = 0;
-
+volatile int count = 0;
 struct list_Motor
 {
   int  p;
@@ -29,7 +30,7 @@ void check_list()
   }
   else
   {
-      TIMSK1 &= (0 << OCIE1A);
+      TIMSK2 &= (0 << OCIE2A);
   }
 }
 
@@ -111,7 +112,7 @@ if (val > this->maxval) val = this->maxval;                         // saturatio
 if (val < this->minval) val = this->minval;                         // stauration min value
 this->reach_value = val;
 if (!this->update())  this->insert();
-TIMSK1 |= (1 << OCIE1A);
+TIMSK2 |= (1 << OCIE2A);
 }
 
 int Motor::get_reach_value()
@@ -168,7 +169,11 @@ Motor::Motor(int maxval, int minval, int perc, int pin)
   init(pin, maxval, minval, perc);
 }
 
-ISR(TIMER1_COMPA_vect)
+ISR(TIMER2_COMPA_vect)
 {
-  check_list();
+  if(count==100){
+    check_list();
+    count = 0;
+  }
+  count++;
 }

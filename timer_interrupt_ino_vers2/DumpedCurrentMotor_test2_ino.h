@@ -1,7 +1,7 @@
-#include <Arduino.h>
+#include "Arduino.h"
+#include "Servo.h"
 #ifndef _LIMIT_CURRENT_H
 #define _LIMIT_CURRENT_H
-#include <Servo.h>
 
 //constants
 
