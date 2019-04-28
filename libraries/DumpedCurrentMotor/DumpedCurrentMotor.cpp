@@ -1,4 +1,4 @@
-#include "DumpedCurrentMotor_test2_ino.h"
+#include "DumpedCurrentMotor.h"
 #include "Servo.h"
 #include "Arduino.h"
 
@@ -21,11 +21,11 @@ list_Motor* list = NULL;
 
 /** init function:
  *  sets max and min values, as well as the percentage to calculate the step
- *  
+ *
  *  @param max value
  *  @param min value
  *  @param percentage of step
- *  
+ *
  *  @return void
  */
 void Motor::init(int maxi =  DEFAULT_MAX_VAL, int mini = DEFAULT_MIN_VAL, int perc = DEFAULT_PERC)
@@ -42,13 +42,13 @@ void Motor::init(int maxi =  DEFAULT_MAX_VAL, int mini = DEFAULT_MIN_VAL, int pe
   //boundaries check
   if (maxi >= DEFAULT_MAX_VAL) maxi = DEFAULT_MAX_VAL;
   if (mini <= DEFAULT_MIN_VAL) mini = DEFAULT_MIN_VAL;
-  
+
   //percentage check
   if (perc >= DEFAULT_MAX_PERC)
     perc = DEFAULT_MAX_PERC;
   else if (perc <= 0)
     perc = DEFAULT_PERC;
-    
+
   //boundaries and step setup
   this->maxval      = maxi;
   this->minval      = mini;
@@ -67,14 +67,14 @@ void Motor::init(int maxi =  DEFAULT_MAX_VAL, int mini = DEFAULT_MIN_VAL, int pe
 
 
 /** attach the motor to a pin
- *  
+ *
  *  @param pin
- *  
+ *
  *  @return void
  */
 void Motor::attach(int pin){
   if(pin<=0 || pin>MAX_PIN) return;
-  
+
   this->pin = pin;
   this->motor.attach(this->pin);
   this->motor.writeMicroseconds(1500);
@@ -89,13 +89,13 @@ void Motor::detach(){
 
 
 /** update function
- *  
+ *
  *  Updates the current value and writes it to the motor.
- *  
+ *
  *  @return true if the reach_value has been reached
  */
 bool Motor::update()                    // update the current value by one step
-{  
+{
   if (this->value < this->reach_value)
    {
       if (abs(this->value - this->reach_value) < this->step)
@@ -120,15 +120,15 @@ bool Motor::update()                    // update the current value by one step
    }
 
   this->motor.writeMicroseconds(this->value);
-    
+
   return this->is_value_reached();
 }
 
 
 /** Method to set the reach_value
- *  
+ *
  *  @param val
- *  
+ *
  *  @return void
  */
 void Motor::set_value(int val)                                      // set the new value of the current to reach and the step
@@ -232,9 +232,9 @@ ISR(TIMER2_COMPA_vect)
 }
 
 /** insert motor into the list
- *  
+ *
  *  @param code of the motor
- *  
+ *
  *  @return void
  */
 void insert(int code)

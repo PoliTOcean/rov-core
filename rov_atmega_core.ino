@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <unistd.h>
-#include "DumpedCurrentMotor_test2_ino.h"
+#include "DumpedCurrentMotor.h"
 
 int valo;
 Motor M1;
