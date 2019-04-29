@@ -16,8 +16,8 @@ void setup()
 
 void loop() 
 {
- if(Serial.available()){
-  valo = Serial.parseInt();
-  M1.set_value(valo);
- }
+  if(Serial.available()){
+    valo = Serial.parseInt();
+    M1.set_value(valo);
+  }
 }
