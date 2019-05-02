@@ -8,13 +8,22 @@
 
 #define SENSORS_SIZE static_cast<int>(sensor_t::Last)+1
 
-volatile sensor_t s; // current sensor
+/**
+ * @s: current sensor to be sent via SPI.
+ * @sensors: array of Sensor objects with byte values.
+ */
+volatile sensor_t s;
 volatile Array<Sensor<byte>, SENSORS_SIZE> sensors;
 
+/**
+ * @process     : it is set to `true` when by the SPI ISR when it ends
+ * @c           : it stores SPI Data Register (SPDR) value, data received via SPI
+ * @lastButton  : it stores the last button data as follows:
+ *                  (*) index for the last button identifier
+ *                  (*) value for the last button value
+ */
 volatile bool process;
 volatile byte c;
-volatile float y, x, rz;
-
 volatile int lastButton[] = { -1, -1 };
 
 IMU imu;
@@ -22,20 +31,21 @@ PressureSensor pressure;
 Motors motors;
 
 
-void setup() {
-    // initialize comunication system
+void setup()
+{
+    // Initialize comunication system
     Serial.begin(9600);
 
-    // initialize IMU sensor
+    // Initialize IMU sensor
     imu.configure();
 
-    // initialize pressure sensor
+    // Initialize pressure sensor
     pressure.configure();
     
-    // initialize motors
+    // Initialize motors
     motors.configure(pressure,imu);
     
-    // delay of 1 second to make actions complete
+    // Delay of 1 second to make actions complete
     delay(1000);
 
     // SPI setup
@@ -44,16 +54,17 @@ void setup() {
     SPDR = 0xFF;
     SPI.attachInterrupt();
     
-    // create sensors array
+    // Create sensors array
     for (auto sensor_type : sensor_t())
         sensors.push_back(Sensor<byte>(sensor_type, 0));
 
     s = sensor_t::First;
 }
 
-void loop() {
-  // prepare data to send back via spi
-  //TODO set all sensors
+void loop()
+{
+  //TODO: Prepare data to send via spi. Setup all the sensors.
+
   sensors[static_cast<int>(sensor_t::PITCH)].setValue(imu.pitch);
   sensors[static_cast<int>(sensor_t::ROLL)].setValue(imu.roll);
 }
@@ -67,37 +78,41 @@ ISR (SPI_STC_vect)
 
     switch(s)
     {
-      case sensor_t::ROLL:         // when we send roll we read x
+      case sensor_t::ROLL:
+        // If we send roll value, we read x value
         motors.x = float(c-127)/127;
       break;
       
-      case sensor_t::PITCH:        // when we send pitch we read y
+      case sensor_t::PITCH:
+        // If we send pitch value, we read y value
         motors.y = float(c-127)/127;
       break;
       
-      case sensor_t::TEMPERATURE:  // when we send temperature we read rz
+      case sensor_t::TEMPERATURE:
+        // If we send temperature value, we read rz value
         motors.rz = float(c-127)/127;
       break;
 
       // TODO change PRESSION with PRESSURE
-      case sensor_t::PRESSION:     // when we send pressure we read button
+      case sensor_t::PRESSION:
+        // If we send pressure value, we read button value
         bool value = (c >> 7) & 0x01;
         unsigned short int id = c & 0x7F;
 
-        // Check if button is not changed
+        // Check if button has not changed
         if (id == lastButton[0] && value == lastButton[1]) break;
       
         // Update lastButton with current button
         lastButton[0] = id; lastButton[1] = value;
         switch(id)
         {
-          // Update value for button with identifier = id
+          // Update value for button with id as identifier
         }
 
       break;
     }
   
-    // if I sent the last sensor, reset current sensor to first one.
+    // If I sent the last sensor, reset current sensor to the first one.
     if (++s > sensor_t::Last)
       s = sensor_t::First;
 
