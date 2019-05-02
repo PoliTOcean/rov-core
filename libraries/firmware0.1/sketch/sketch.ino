@@ -15,6 +15,8 @@ volatile bool process;
 volatile byte c;
 volatile float y, x, rz;
 
+volatile int lastButton[] = { -1, -1 };
+
 IMU imu;
 PressureSensor pressure;
 Motors motors;
@@ -64,21 +66,33 @@ ISR (SPI_STC_vect)
     SPDR = sensors[static_cast<int>(s)].getValue();
 
     switch(s){
-       case sensor_t::ROLL:         // when we send roll we read x
-       motors.x = float(c-127)/127;
-       break;
+      case sensor_t::ROLL:         // when we send roll we read x
+      motors.x = float(c-127)/127;
+      break;
       
-       case sensor_t::PITCH:        // when we send pitch we read y
-       motors.y = float(c-127)/127;
-       break;
+      case sensor_t::PITCH:        // when we send pitch we read y
+      motors.y = float(c-127)/127;
+      break;
       
-       case sensor_t::TEMPERATURE:  // when we send temperature we read rz
-       motors.rz = float(c-127)/127;
-       break;
+      case sensor_t::TEMPERATURE:  // when we send temperature we read rz
+      motors.rz = float(c-127)/127;
+      break;
 
-       // TODO change PRESSION with PRESSURE
-       case sensor_t::PRESSION:     // when we send pressure we read button
-       //TODO parse button
+      // TODO change PRESSION with PRESSURE
+      case sensor_t::PRESSION:     // when we send pressure we read button
+      bool value = (c >> 7) & 0x01;
+      unsigned short int id = c & 0x7F;
+
+      // Check if button is not changed
+      if (id == lastButton[0] && value == lastButton[1])
+        break;
+      
+      // Update lastButton with current button
+      lastButton[0] = id; lastButton[1] = value;
+      switch(id) {
+        // Update value for button with identifier = id
+      }
+
        break;
     }
   
