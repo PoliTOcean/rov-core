@@ -106,7 +106,7 @@ ISR (SPI_STC_vect)
         lastButton[0] = id; lastButton[1] = value;
         switch(id)
         {
-          // Update value for button with id as identifier
+          // TODO: Update value for button with id as identifier
         }
 
       break;
