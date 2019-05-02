@@ -15,6 +15,7 @@ class Motors {
   public:
     void configure(PressureSensor psensor,IMU imu);
     void control();
+    byte x,y,rz;
   private:
     Motor M0,M1,M2,M3,M4,M5,M6;
     PressureSensor pressureSensor;

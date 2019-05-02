@@ -1,6 +1,3 @@
-/*
- * Created by pettinz.
- */
 
 #include <Sensor.h>
 #include <Array.h>
@@ -16,6 +13,7 @@ volatile Array<Sensor<byte>, SENSORS_SIZE> sensors;
 
 volatile bool process;
 volatile byte c;
+volatile float y, x, rz;
 
 IMU imu;
 PressureSensor pressure;
@@ -52,6 +50,8 @@ void setup() {
 }
 
 void loop() {
+  // prepare data to send back via spi
+  //TODO set all sensors
   sensors[static_cast<int>(sensor_t::PITCH)].setValue(imu.pitch);
   sensors[static_cast<int>(sensor_t::ROLL)].setValue(imu.roll);
 }
@@ -62,6 +62,25 @@ ISR (SPI_STC_vect)
     
     // Prepare the next sensor's value to send through SPI
     SPDR = sensors[static_cast<int>(s)].getValue();
+
+    switch(s){
+       case sensor_t::ROLL:         // when we send roll we read x
+       motors.x = float(c-127)/127;
+       break;
+      
+       case sensor_t::PITCH:        // when we send pitch we read y
+       motors.y = float(c-127)/127;
+       break;
+      
+       case sensor_t::TEMPERATURE:  // when we send temperature we read rz
+       motors.rz = float(c-127)/127;
+       break;
+
+       // TODO change PRESSION with PRESSURE
+       case sensor_t::PRESSION:     // when we send pressure we read button
+       //TODO parse button
+       break;
+    }
   
     // if I sent the last sensor, reset current sensor to first one.
     if (++s > sensor_t::Last)
