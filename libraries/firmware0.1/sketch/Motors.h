@@ -16,6 +16,15 @@ class Motors {
     void configure(PressureSensor psensor,IMU imu);
     void control();
     byte x,y,rz;
+    bool started;
+    int up,down;
+    void start(); // TODO implementnt
+    void stop();  // TODO implementnt
+    void stopVertical();  // TODO implementnt
+    void goUp();  // TODO implementnt
+    void goDown();  // TODO implementnt
+    int velocity;
+    
   private:
     Motor M0,M1,M2,M3,M4,M5,M6;
     PressureSensor pressureSensor;

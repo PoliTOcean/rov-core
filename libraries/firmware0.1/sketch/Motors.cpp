@@ -118,7 +118,7 @@ void Motors::evaluateVertical(float kAng, float kDep, int vertical[4]){
 
 /* function to evaluate powers for horizontal movement.*/
 // TODO we have to pass from the SPI x y and rz and set the motors values
-void evaluateHorizontal(int *leftFront,int  *rightFront,int  *leftBack,int  *rightBack) {
+void Motors::evaluateHorizontal(int *leftFront,int  *rightFront,int  *leftBack,int  *rightBack) {
  // { // I puntatori si riferiscono ai motori
 //    int signLF = -1; int signRF = 1; int signLB = -1; int signRB = 1;
 //    *leftFront = H_MUL * signLF * (-y+x+rz);
@@ -126,4 +126,20 @@ void evaluateHorizontal(int *leftFront,int  *rightFront,int  *leftBack,int  *rig
 //    *leftBack = H_MUL * signLB * (-y-x+rz);
 //    *rightBack = H_MUL * signRB * (-y+x-rz);
 //  }
+}
+
+void Motors::start(){
+  // TODO implement it
+}
+void Motors::stop(){
+  // TODO implement it
+}
+void Motors::stopVertical(){
+  //TODO implement it
+}
+void Motors::goUp(){
+  //TODO implement it
+}
+void Motors::goDown(){
+  //TODO implement it
 }
