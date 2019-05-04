@@ -53,8 +53,8 @@ void setup() {
 void loop() {
   // prepare data to send back via spi
   //TODO set all sensors
-  sensors[static_cast<int>(sensor_t::PITCH)].setValue(imu.pitch);
-  sensors[static_cast<int>(sensor_t::ROLL)].setValue(imu.roll);
+  sensors[static_cast<int>(sensor_t::PITCH)].setValue(imu.getPitch());
+  sensors[static_cast<int>(sensor_t::ROLL)].setValue(imu.getRoll());
 }
 
 ISR (SPI_STC_vect)

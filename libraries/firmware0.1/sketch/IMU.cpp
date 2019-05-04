@@ -28,6 +28,9 @@ void IMU::configure(){
 }
 
 void IMU::complementaryFilter(){
+    if(!updatedValues){
+      return;
+    }
     float pitchAcc, rollAcc, droll, dpitch, dyaw;
     float cdr, cdp, cdy, cr, cp;
     float sdr, sdp, sdy, sr, sp;
@@ -63,6 +66,7 @@ void IMU::complementaryFilter(){
         roll = roll * 0.9 + rollAcc * 0.1;
         pitch = pitch * 0.9 + pitchAcc * 0.1;   
     }
+    updatedValues=false;
 }
 
 
@@ -90,8 +94,17 @@ void IMU::imuRead(){
   Gx = (Gx + 159.07)/1800; //2700 @10ms
   Gy = (Gy - 115.9)/1600; //2500 @10ms
   Gz= (Gz + 141.44)/1600; //2500 @10ms
-  
-  complementaryFilter(); //call calculation function
+  updatedValues = true;
+}
+
+float IMU::getPitch(){
+  complementaryFilter();
+  return pitch;
+}
+
+float IMU::getRoll(){
+  complementaryFilter();
+  return roll;
 }
 
 void IMU::printValues(){

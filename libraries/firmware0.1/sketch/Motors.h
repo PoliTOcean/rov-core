@@ -33,7 +33,6 @@ class Motors {
     void evaluateHorizontal(int *leftFront,int  *rightFront,int  *leftBack,int  *rightBack);
     float calcPitchPower(float kAng);
     float calcRollPower(float kAng);
-    
 };
 
 #endif
