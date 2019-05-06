@@ -16,10 +16,10 @@ class IMU {
     void printValues();
     void imuRead();
     void complementaryFilter();
-    
-  private:
     float pitch;
     float roll;
+    
+  private:
     float Ax,Ay,Az,Gx,Gy,Gz,Tmp;
     float gyrData;
     int dt;

@@ -94,7 +94,7 @@ void MS5837::read() {
 		Wire.endTransmission();
 		Count++;
 		proceed = false;
-    }
+	}
 
 	if(Count==2 && proceed){
 	 Wire.beginTransmission(MS5837_ADDR);

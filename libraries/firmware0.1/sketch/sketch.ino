@@ -43,19 +43,20 @@ void setup() {
 
 void loop() {
   // prepare data to send back via spi
-<<<<<<< HEAD
+  unsigned long now = micros();
   
-
+  brSensor.read();
+  imu.imuRead();
+  imu.complementaryFilter();
   sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(brSensor.temperature());
   sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(brSensor.pressure());
   sensors[static_cast<int>(sensor_t::PITCH)].setValue(imu.pitch);
   sensors[static_cast<int>(sensor_t::ROLL)].setValue(imu.roll);
+  motors.evaluateHorizontal();
+  motors.evaluateVertical();
   
-=======
-  //TODO set all sensors
-  sensors[static_cast<int>(sensor_t::PITCH)].setValue(imu.getPitch());
-  sensors[static_cast<int>(sensor_t::ROLL)].setValue(imu.getRoll());
->>>>>>> f719ed0189b2b2ac0396d797477e58be158bdc14
+  now = micros()-now;
+  Serial.println((float)now/1000);
 }
 
 ISR (SPI_STC_vect)
