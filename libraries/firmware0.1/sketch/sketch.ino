@@ -41,26 +41,35 @@ void setup() {
     s = sensor_t::First;              // set the sensor counter
 }
 
-void loop() {
-  // prepare data to send back via spi
-  unsigned long now = micros();
-  
+void sensorsRead(){
   brSensor.read();
   imu.imuRead();
   imu.complementaryFilter();
+}
+
+void sensorsPrepare(){
   sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(brSensor.temperature());
   sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(brSensor.pressure());
   sensors[static_cast<int>(sensor_t::PITCH)].setValue(imu.pitch);
   sensors[static_cast<int>(sensor_t::ROLL)].setValue(imu.roll);
+}
 
+void loop() {
+  // prepare data to send back via spi
+ // unsigned long now = micros();
+
+  sensorsRead();
+
+  sensorsPrepare();
+  
   if(updatedAxis){
     motors.evaluateHorizontal();
     updatedAxis=false;
   }
   motors.evaluateVertical();
   
-  now = micros()-now;
-  Serial.println((float)now/1000);
+ // now = micros()-now;
+ // Serial.println((float)now/1000);
 }
 
 ISR (SPI_STC_vect)
@@ -68,7 +77,7 @@ ISR (SPI_STC_vect)
     static Motors* motors_ = &motors;
     
     c = SPDR;
-    
+
     // Prepare the next sensor's value to send through SPI
     SPDR = sensors[static_cast<int>(s)].getValue();
 
@@ -84,6 +93,11 @@ ISR (SPI_STC_vect)
     
 
     if(nextIsButton){
+      
+      /* DEBUG */
+      Serial.print("\tButton received:\t");
+      Serial.println(c);
+      
       // process the nextIsButton
       switch(c){
         case MOTORS_ON:

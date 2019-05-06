@@ -31,21 +31,6 @@ void Motors::configure(MS5837 psensor, IMU imu){
     savePressure = false;
     reqPress = brSensor.pressure();
 }
-void Motors::control(){
-//    if(start){                            //if the ROV is started
-//      #ifdef TEST                                     //if we are in water
-//          evaluateVertical(K_ANG, K_DEP, vertical);   //then evaluate vertical values for autostabilization and autoquote
-//      #else                                           //else, if we aren't,
-//          evaluateVertical(0, 0, vertical);           //then evaluate them just for joystick up/down
-//      #endif
-//          
-//          evaluateHorizontal(&valLF, &valRF, &valLB, &valRB);           //evaluate values for horizontal movement
-//
-//    //set new motors powers
-//    //setServosValues(valLF, valRF, valLB, valRB, vertical[0], vertical[1], vertical[2], vertical[3], MAX_SRV);
-//  }else                                 //else, if the ROV is stopped,
-//    //setServosValues(0, 0, 0, 0, 0, 0, 0, 0, 0);       //then send STOP signal to motors
-}
 
 //function for pitch power calculation
 float Motors::calcPitchPower(){
@@ -112,10 +97,18 @@ void Motors::evaluateHorizontal() {
 }
 
 void Motors::start(){
+  
+  /* DEBUG */
+  Serial.println("Starting...");
+  
   started = true;
 }
 
 void Motors::stop(){
+  
+  /* DEBUG */
+  Serial.println("Stopping...");
+  
   x = 0;
   y = 0;
   rz = 0;

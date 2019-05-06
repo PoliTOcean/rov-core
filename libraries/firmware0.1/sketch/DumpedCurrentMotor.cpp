@@ -139,6 +139,11 @@ void Motor::set_value(int val)                                      // set the n
   if (val > MAX_VAL) val = MAX_VAL;                         // saturation max value
   if (val < MIN_VAL) val = MIN_VAL;                         // stauration min value
   this->reach_value = map(val, MIN_VAL, MAX_VAL, this->minval, this->maxval);
+
+  /* DEBUG */
+  Serial.print("\tMotor reach value:\t");
+  Serial.println(this->reach_value);
+  
   if (!this->update()){
     insert(this->code);
     TIMSK2 |= (1 << OCIE2A);
