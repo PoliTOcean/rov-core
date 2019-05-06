@@ -11,7 +11,7 @@
 
 
 
-void Motors::configure(PressureSensor psensor, IMU imu){
+void Motors::configure(MS5837 psensor, IMU imu){
     cli();                                        //stop interrupts
       // attach motors
       M0.attach(M0_pin);                              

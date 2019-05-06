@@ -1,60 +1,55 @@
 
-#include <Sensor.h>
 #include <Array.h>
 #include <SPI.h>
 #include "IMU.h"
-#include "PressureSensor.h"
+#include "Sensor.h"
+#include "MS5837.h"
 #include "Motors.h"
 #include "Commands.h"
 
 #define SENSORS_SIZE static_cast<int>(sensor_t::Last)+1
 
-volatile sensor_t s; // current sensor
-volatile Array<Sensor<byte>, SENSORS_SIZE> sensors;
+volatile sensor_t s;  // sensor counter
+volatile Array<Sensor<byte>, SENSORS_SIZE> sensors; // array of sensors
 
 volatile bool process;
 volatile byte c;
-volatile float y, x, rz;
+volatile bool nextIsButton = false;
+volatile int receivedDataSelector = 0;
 
-IMU imu;
-PressureSensor pressure;
-Motors motors;
+IMU imu;  // imu sensor
+
+MS5837 brSensor;  // pressure sensor
+Motors motors;  // motors manager
 
 
 void setup() {
-    // initialize comunication system
-    Serial.begin(9600);
-
-    // initialize IMU sensor
-    imu.configure();
-
-    // initialize pressure sensor
-    pressure.configure();
-    
-    // initialize motors
-    motors.configure(pressure,imu);
-    
-    // delay of 1 second to make actions complete
-    delay(1000);
-
-    // SPI setup
-    pinMode(MISO, OUTPUT);
+    Serial.begin(9600);                   // initialize comunication via the serial port
+    imu.configure();                      // initialize IMU sensor
+    brSensor.init();                      // initialize pressure sensor
+    brSensor.setModel(MS5837::MS5837_30BA);
+    brSensor.setFluidDensity(997);        // kg/m^3 (freshwater, 1029 for seawater)
+    motors.configure(brSensor,imu);       // initialize motors
+    delay(1000);                          // delay of 1 second to make actions complete
+    pinMode(MISO, OUTPUT);                // SPI setup
     SPCR |= _BV(SPE);
-    SPDR = 0xFF;
-    SPI.attachInterrupt();
+    SPDR = 0xFF;                          // set the SPI data register to 0xFF before sending sensors data
+    SPI.attachInterrupt();                // enable SPI
     
-    // create sensors array
-    for (auto sensor_type : sensor_t())
+    for (auto sensor_type : sensor_t()) // create sensors array
         sensors.push_back(Sensor<byte>(sensor_type, 0));
-
-    s = sensor_t::First;
+    s = sensor_t::First;              // set the sensor counter
 }
 
 void loop() {
   // prepare data to send back via spi
-  //TODO set all sensors
+  
+
+  sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(brSensor.temperature());
+  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(brSensor.pressure());
   sensors[static_cast<int>(sensor_t::PITCH)].setValue(imu.pitch);
   sensors[static_cast<int>(sensor_t::ROLL)].setValue(imu.roll);
+  
 }
 
 ISR (SPI_STC_vect)
@@ -64,23 +59,15 @@ ISR (SPI_STC_vect)
     // Prepare the next sensor's value to send through SPI
     SPDR = sensors[static_cast<int>(s)].getValue();
 
-    switch(s){
-       case sensor_t::ROLL:         // when we send roll we read x
-       motors.x = c-127;
-       break;
-      
-       case sensor_t::PITCH:        // when we send pitch we read y
-       motors.y = c-127;
-       break;
-      
-       case sensor_t::TEMPERATURE:  // when we send temperature we read rz
-       motors.rz = c-127;
-       break;
+    if(c == 0x00){
+      //the next incoming data is a button
+      nextIsButton=true;
+      return;
+    }
 
-       // TODO change PRESSION with PRESSURE
-       case sensor_t::PRESSION:     // when we send pressure we read button
-       byte selector = c;
-       switch(selector){
+    if(nextIsButton){
+      // process the nextIsButton
+      switch(c){
         case MOTORS_ON:
           motors.start();
         break;
@@ -109,9 +96,28 @@ ISR (SPI_STC_vect)
           motors.velocity = 1;
         break;
        }
-       
+      nextIsButton = false; // last command
+      receivedDataSelector = 0; // restart from x
+    }else{
+      switch(receivedDataSelector){
+       case 0:         //  read x
+        motors.x = c-127;
        break;
+      
+       case 1:        // read y
+       motors.y = c-127;
+       break;
+      
+       case 2:  //  read rz
+       motors.rz = c-127;
+       break;
+      }
+      
+      if (++receivedDataSelector >= 3)
+        receivedDataSelector = 0;
     }
+      
+    
   
     // if I sent the last sensor, reset current sensor to first one.
     if (++s > sensor_t::Last)

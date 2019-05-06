@@ -17,7 +17,7 @@
 #define GYRO_YOUT_L   0x46
 #define GYRO_ZOUT_H   0x47
 #define GYRO_ZOUT_L   0x48
-#define dt 0.01               // IMU timer timeout in seconds  (10ms)
+
 
 void IMU::configure(){
   Wire.begin();
@@ -25,6 +25,7 @@ void IMU::configure(){
   Wire.write(0x6B);  // PWR_MGMT_1 register
   Wire.write(0);     // set to zero (wakes up the MPU-6050)
   Wire.endTransmission(true);
+  dt = 0;
 }
 
 void IMU::complementaryFilter(){
@@ -33,6 +34,10 @@ void IMU::complementaryFilter(){
     float sdr, sdp, sdy, sr, sp;
     float accTot;
 
+    float dt = (float) (micros() - lastUpdate)/100; //todo check it!
+    lastUpdate = micros(); // update `lastUpdate` for the next iteration
+    
+    // add real dt with micros
     droll = -Gx * dt;   // Angle around the X-axis (upside-down)
     dpitch = -Gy * dt;  // Angle around the Y-axis (upside-down)
     dyaw = Gz * dt;    // Angle around the Z-axis
@@ -63,14 +68,22 @@ void IMU::complementaryFilter(){
         roll = roll * 0.9 + rollAcc * 0.1;
         pitch = pitch * 0.9 + pitchAcc * 0.1;   
     }
+
+    dt = 0;
 }
 
 
 void IMU::imuRead(){
+  
   Wire.beginTransmission(MPU_ADDR);
   Wire.write(0x3B);  // starting with register 0x3B (ACCEL_XOUT_H)
   Wire.endTransmission(false);
   Wire.requestFrom(MPU_ADDR, 14, true); // request a total of 14 registers
+
+  unsigned long now = micros();
+  dt += now - lastUpdate;       
+  lastUpdate = now;
+  
   Ax = Wire.read() << 8 | Wire.read(); // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)
   Ay = Wire.read() << 8 | Wire.read(); // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
   Az = Wire.read() << 8 | Wire.read(); // 0x3F (ACCEL_ZOUT_H) & 0x40 (ACCEL_ZOUT_L)

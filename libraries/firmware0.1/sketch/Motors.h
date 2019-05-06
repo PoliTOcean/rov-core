@@ -8,12 +8,12 @@
 
 #include "Arduino.h"
 #include "DumpedCurrentMotor.h"
-#include "PressureSensor.h"
+#include "MS5837.h"
 #include "IMU.h"
 
 class Motors {
   public:
-    void configure(PressureSensor psensor,IMU imu);
+    void configure(MS5837 psensor,IMU imu);
     void control();
     byte x,y,rz;
     bool started;
@@ -27,7 +27,7 @@ class Motors {
     
   private:
     Motor M0,M1,M2,M3,M4,M5,M6;
-    PressureSensor pressureSensor;
+    MS5837 pressureSensor;
     IMU imuSensor;
     void evaluateVertical(float kAng, float kDep, int vertical[4]);
     void evaluateHorizontal(int *leftFront,int  *rightFront,int  *leftBack,int  *rightBack);
