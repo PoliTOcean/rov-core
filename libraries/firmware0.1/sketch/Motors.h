@@ -13,21 +13,24 @@
 
 class Motors {
   public:
-    void configure(MS5837 psensor,IMU imu);
-    void control();
     volatile byte x,y,rz;
     volatile bool started;
     volatile int up,down;
+    volatile int velocity;
+    
+    void configure(MS5837 psensor,IMU imu);
+
     void start();
     void stop();
+    
     void stopVertical();
     void goUp();
     void goDown();
-    volatile int velocity;
+    
     void evaluateVertical();
     void evaluateHorizontal();
     
-  private:
+  protected:
     const int signFL = -1;
     const int signFR = 1;
     const int signBL = -1;
@@ -36,12 +39,12 @@ class Motors {
     const int signUL = 1;
     const int signUB = 1;
 
+    Motor FL, FR, BL, BR, UR, UL, UB;
+    
+    MS5837 brSensor;
     bool savePressure;
-
     float reqPress;
   
-    Motor FL, FR, BL, BR, UR, UL, UB;
-    MS5837 brSensor;
     IMU imuSensor;
     float calcPitchPower();
     float calcRollPower();
