@@ -46,12 +46,12 @@ void Motors::control(){
 float Motors::calcPitchPower(float kAng){
   /* it takes the difference between current pitch and the requested one from the joystick
    * and multiplicates it for a multiplication constant, passed as parameter */
-  return kAng*(imuSensor.pitch+(15.0*3.14/180)); //(the angle is the orizontal due to the sensor inclination)
+  return kAng*(imuSensor.getPitch()+(15.0*3.14/180)); //(the angle is the orizontal due to the sensor inclination)
 }
 
 //function for roll power calculation. Same as above, without sign inversion
 float Motors::calcRollPower(float kAng){
-  return kAng*(imuSensor.roll+(5.0*3.14/180)); //(the angle is the orizontal due to the sensor inclination)
+  return kAng*(imuSensor.getRoll()+(5.0*3.14/180)); //(the angle is the orizontal due to the sensor inclination)
 }
 
 //function to evaluate vertical motors values
@@ -119,13 +119,12 @@ void Motors::evaluateVertical(float kAng, float kDep, int vertical[4]){
 /* function to evaluate powers for horizontal movement.*/
 // TODO we have to pass from the SPI x y and rz and set the motors values
 void Motors::evaluateHorizontal(int *leftFront,int  *rightFront,int  *leftBack,int  *rightBack) {
- // { // I puntatori si riferiscono ai motori
+ // I puntatori si riferiscono ai motori
 //    int signLF = -1; int signRF = 1; int signLB = -1; int signRB = 1;
 //    *leftFront = H_MUL * signLF * (-y+x+rz);
 //    *rightFront = H_MUL * signRF* (-y-x-rz);
 //    *leftBack = H_MUL * signLB * (-y-x+rz);
 //    *rightBack = H_MUL * signRB * (-y+x-rz);
-//  }
 }
 
 void Motors::start(){
