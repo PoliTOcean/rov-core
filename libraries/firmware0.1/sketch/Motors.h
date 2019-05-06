@@ -15,15 +15,15 @@ class Motors {
   public:
     void configure(MS5837 psensor,IMU imu);
     void control();
-    byte x,y,rz;
-    bool started;
-    int up,down;
+    volatile byte x,y,rz;
+    volatile bool started;
+    volatile int up,down;
     void start();
     void stop();
     void stopVertical();
     void goUp();
     void goDown();
-    int velocity;
+    volatile int velocity;
     void evaluateVertical();
     void evaluateHorizontal();
     

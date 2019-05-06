@@ -10,8 +10,7 @@
 #define BL_pin  14
 
 #define kAng 0.5
-#define V_MUL 2
-#define H_MUL 2
+#define V_MUL 50
 #define kDep 0.5
 
 
@@ -106,28 +105,32 @@ void Motors::evaluateHorizontal() {
     return;
   }
   // I puntatori si riferiscono ai motori
-  FL.set_value(H_MUL * signFL * (-y+x+rz));
-  FR.set_value(H_MUL * signFR * (-y-x-rz));
-  BL.set_value(H_MUL * signBL * (-y-x+rz));
-  BR.set_value(H_MUL * signBR * (-y+x-rz));
+  FL.set_value(signFL * (-y+x+rz));
+  FR.set_value(signFR * (-y-x-rz));
+  BL.set_value(signBL * (-y-x+rz));
+  BR.set_value(signBR * (-y+x-rz));
 }
 
 void Motors::start(){
   started = true;
 }
+
 void Motors::stop(){
   x = 0;
   y = 0;
   rz = 0;
   started = false;
 }
+
 void Motors::stopVertical(){
   up = 0;
   down = 0;
 }
+
 void Motors::goUp(){
   up = 1;
 }
+
 void Motors::goDown(){
   down = 1;
 }

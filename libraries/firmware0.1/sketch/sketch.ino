@@ -12,7 +12,7 @@
 volatile sensor_t s;  // sensor counter
 volatile Array<Sensor<byte>, SENSORS_SIZE> sensors; // array of sensors
 
-volatile bool process;
+volatile bool updatedAxis = false;
 volatile byte c;
 volatile bool nextIsButton = false;
 volatile int receivedDataSelector = 0;
@@ -52,7 +52,11 @@ void loop() {
   sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(brSensor.pressure());
   sensors[static_cast<int>(sensor_t::PITCH)].setValue(imu.pitch);
   sensors[static_cast<int>(sensor_t::ROLL)].setValue(imu.roll);
-  motors.evaluateHorizontal();
+
+  if(updatedAxis){
+    motors.evaluateHorizontal();
+    updatedAxis=false;
+  }
   motors.evaluateVertical();
   
   now = micros()-now;
@@ -61,46 +65,53 @@ void loop() {
 
 ISR (SPI_STC_vect)
 {
+    static Motors* motors_ = &motors;
+    
     c = SPDR;
     
     // Prepare the next sensor's value to send through SPI
     SPDR = sensors[static_cast<int>(s)].getValue();
 
+    // if I sent the last sensor, reset current sensor to first one.
+    if (++s > sensor_t::Last)
+      s = sensor_t::First;
+      
     if(c == 0x00){
       //the next incoming data is a button
       nextIsButton=true;
       return;
     }
+    
 
     if(nextIsButton){
       // process the nextIsButton
       switch(c){
         case MOTORS_ON:
-          motors.start();
+          motors_->start();
         break;
         case MOTORS_OFF:
-          motors.stop();
+          motors_->stop();
         break;
         case VDOWN:
-          motors.goDown();
+          motors_->goDown();
         break;
         case VDOWN_STOP:
-          motors.stopVertical();
+          motors_->stopVertical();
         break;
         case VUP:
-          motors.goUp();
+          motors_->goUp();
         break;
         case VUP_STOP:
-          motors.stopVertical();
+          motors_->stopVertical();
         break;
         case FAST:
-          motors.velocity = 3;
+          motors_->velocity = 3;
         break;
         case NORMAL:
-          motors.velocity = 2;
+          motors_->velocity = 2;
         break;
         case SLOW:
-          motors.velocity = 1;
+          motors_->velocity = 1;
         break;
        }
       nextIsButton = false; // last command
@@ -108,27 +119,21 @@ ISR (SPI_STC_vect)
     }else{
       switch(receivedDataSelector){
        case 0:         //  read x
-        motors.x = c-127;
+        motors_->x = c-127;
        break;
       
        case 1:        // read y
-       motors.y = c-127;
+       motors_->y = c-127;
        break;
       
        case 2:  //  read rz
-       motors.rz = c-127;
+       motors_->rz = c-127;
        break;
       }
       
       if (++receivedDataSelector >= 3)
         receivedDataSelector = 0;
-    }
-      
-    
-  
-    // if I sent the last sensor, reset current sensor to first one.
-    if (++s > sensor_t::Last)
-      s = sensor_t::First;
 
-    process = true;
+      updatedAxis = true;
+    }
 }

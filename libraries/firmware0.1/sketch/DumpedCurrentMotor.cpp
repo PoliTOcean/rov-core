@@ -2,6 +2,9 @@
 #include "Servo.h"
 #include "Arduino.h"
 
+#define MAX_VAL 127
+#define MIN_VAL -127
+
 /*
  * in the vect vector are saved all the instances of the motor that will be create in the following way
  * Motor code    |   0    |   1    |   2    |   3    |   4    |   5    |   6   |
@@ -133,9 +136,9 @@ bool Motor::update()                    // update the current value by one step
  */
 void Motor::set_value(int val)                                      // set the new value of the current to reach and the step
 {
-  if (val > this->maxval) val = this->maxval;                         // saturation max value
-  if (val < this->minval) val = this->minval;                         // stauration min value
-  this->reach_value = val;
+  if (val > MAX_VAL) val = MAX_VAL;                         // saturation max value
+  if (val < MIN_VAL) val = MIN_VAL;                         // stauration min value
+  this->reach_value = map(val, MIN_VAL, MAX_VAL, this->minval, this->maxval);
   if (!this->update()){
     insert(this->code);
     TIMSK2 |= (1 << OCIE2A);
