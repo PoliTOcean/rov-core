@@ -1,13 +1,13 @@
 #include "Arduino.h"
 #include "Motors.h"
 
-#define UR_pin  4
-#define UL_pin  5
-#define UB_pin  6
-#define FR_pin  11
-#define FL_pin  12
-#define BR_pin  13
-#define BL_pin  14
+#define UR_pin  7
+#define UL_pin  2
+#define UB_pin  8
+#define FR_pin  6
+#define FL_pin  3
+#define BR_pin  4
+#define BL_pin  5
 
 #define kAng 0.5
 #define V_MUL 50
