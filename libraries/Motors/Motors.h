@@ -42,7 +42,7 @@ class Motors {
     const int signUL = 1;
     const int signUB = 1;
 
-    volatile Motor FL, FR, BL, BR, UR, UL, UB;
+    Motor FL, FR, BL, BR, UR, UL, UB;
     
     MS5837 brSensor;
     bool savePressure;
