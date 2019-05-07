@@ -22,6 +22,7 @@ IMU imu;  // imu sensor
 MS5837 brSensor;  // pressure sensor
 Motors motors;  // motors manager
 
+using namespace Commands;
 
 void setup() {
     Serial.begin(9600);                   // initialize comunication via the serial port
@@ -114,31 +115,31 @@ ISR (SPI_STC_vect)
       
       // process the nextIsButton
       switch(c){
-        case MOTORS_ON:
-          motors_->start();
+        case Actions::START_AND_STOP:
+          if (motors_->started)
+            motors_->stop();
+          else
+            motors_->start();
         break;
-        case MOTORS_OFF:
-          motors_->stop();
-        break;
-        case VDOWN:
+        case Actions::VDOWN_ON:
           motors_->goDown();
         break;
-        case VDOWN_STOP:
+        case Actions::VDOWN_OFF:
           motors_->stopVertical();
         break;
-        case VUP:
+        case Actions::VUP_ON:
           motors_->goUp();
         break;
-        case VUP_STOP:
+        case Actions::VUP_OFF:
           motors_->stopVertical();
         break;
-        case FAST:
+        case Actions::FAST:
           motors_->velocity = 3;
         break;
-        case NORMAL:
+        case Actions::MEDIUM:
           motors_->velocity = 2;
         break;
-        case SLOW:
+        case Actions::SLOW:
           motors_->velocity = 1;
         break;
        }
