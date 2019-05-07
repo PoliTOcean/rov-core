@@ -41,6 +41,8 @@ void Motors::configure(MS5837 psensor, IMU imu){
     savePressure = false;
     reqPress = brSensor.pressure();
     powerMode = 1;
+
+    configured = true;
 }
 
 //function for pitch power calculation
@@ -59,6 +61,7 @@ float Motors::calcRollPower(){
 
 //function to evaluate vertical motors values
 void Motors::evaluateVertical(){
+   if(!configured) return;
 
    float pitchPower, rollPower;
    if(!started){
@@ -151,6 +154,8 @@ void Motors::goDown(){
 }
 
 void Motors::setPower(int powerMode){
+  if(!configured) return;
+
   float mul = 1.0;
   switch(powerMode){
     case 1: mul = 1.0; break;

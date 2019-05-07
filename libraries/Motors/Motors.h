@@ -50,7 +50,9 @@ class Motors {
     MS5837 brSensor;
     bool savePressure;
     float reqPress;
-  
+
+    bool configured = false;
+
     IMU imuSensor;
     float calcPitchPower();
     float calcRollPower();
