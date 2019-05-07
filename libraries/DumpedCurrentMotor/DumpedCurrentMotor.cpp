@@ -2,6 +2,9 @@
 #include "Servo.h"
 #include "Arduino.h"
 
+#define MAX_VAL 127
+#define MIN_VAL -127
+
 /*
  * in the vect vector are saved all the instances of the motor that will be create in the following way
  * Motor code    |   0    |   1    |   2    |   3    |   4    |   5    |   6   |
@@ -31,6 +34,7 @@ list_Motor* list = NULL;
 void Motor::init(int maxi =  DEFAULT_MAX_VAL, int mini = DEFAULT_MIN_VAL, int perc = DEFAULT_PERC)
 {
   //Timer setup
+  cli();
   TCCR2A = 0;                                    // set entire TCCR1A register to 0
   TCCR2B = 0;                                    // same for TCCR1B
   TCNT2  = 0;                                    // initialize counter value to 0
@@ -63,6 +67,7 @@ void Motor::init(int maxi =  DEFAULT_MAX_VAL, int mini = DEFAULT_MIN_VAL, int pe
   this->code        = i;
   vect[i] = this;
   i++;
+  sei();
 }
 
 
@@ -77,13 +82,16 @@ void Motor::attach(int pin){
 
   this->pin = pin;
   this->motor.attach(this->pin);
-  this->motor.writeMicroseconds(1500);
+  this->motor.writeMicroseconds(SERVO_STOP_VALUE);
 }
 
 
 /** detach the motor **/
 void Motor::detach(){
-  this->pin = -1;
+  this->pin   = -1;
+  this->value = SERVO_STOP_VALUE;
+  
+  this->motor.writeMicroseconds(SERVO_STOP_VALUE);
   this->motor.detach();
 }
 
@@ -133,9 +141,14 @@ bool Motor::update()                    // update the current value by one step
  */
 void Motor::set_value(int val)                                      // set the new value of the current to reach and the step
 {
-  if (val > this->maxval) val = this->maxval;                         // saturation max value
-  if (val < this->minval) val = this->minval;                         // stauration min value
-  this->reach_value = val;
+  if (val > MAX_VAL) val = MAX_VAL;                         // saturation max value
+  if (val < MIN_VAL) val = MIN_VAL;                         // stauration min value
+  this->reach_value = map(val, MIN_VAL, MAX_VAL, this->minval, this->maxval);
+
+  /* DEBUG */
+  Serial.print("\tMotor reach value:\t");
+  Serial.println(this->reach_value);
+  
   if (!this->update()){
     insert(this->code);
     TIMSK2 |= (1 << OCIE2A);
