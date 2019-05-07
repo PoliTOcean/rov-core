@@ -16,16 +16,19 @@ class Motors {
     volatile byte x,y,rz;
     volatile bool started;
     volatile int up,down;
-    volatile int velocity;
-    
-    void configure(MS5837 psensor,IMU imu);
+    volatile int powerMode;
+        
+    void configure(MS5837 psensor, IMU imu);
 
     void start();
     void stop();
     
-    void stopVertical();
+    void stopUp();
+    void stopDown();
     void goUp();
     void goDown();
+
+    void setPower(int power);
     
     void evaluateVertical();
     void evaluateHorizontal();
@@ -39,7 +42,7 @@ class Motors {
     const int signUL = 1;
     const int signUB = 1;
 
-    Motor FL, FR, BL, BR, UR, UL, UB;
+    volatile Motor FL, FR, BL, BR, UR, UL, UB;
     
     MS5837 brSensor;
     bool savePressure;

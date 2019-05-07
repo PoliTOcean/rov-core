@@ -1,0 +1,4 @@
+Sensor  KEYWORD1
+setValue    KEYWORD2
+getValue    KEYWORD2
+getType KEYWORD2

@@ -1,6 +1,9 @@
 #include "Arduino.h"
 #include "Motors.h"
 
+#define AXES_MAX 254
+#define AXES_MIN 1
+
 #define UR_pin  7
 #define UL_pin  2
 #define UB_pin  8
@@ -16,18 +19,19 @@
 
 void Motors::configure(MS5837 psensor, IMU imu){
     // attach motors
-    UR.attach(UR_pin);                              
-    UL.attach(UL_pin);                              
-    UB.attach(UB_pin);                              
-    FR.attach(FR_pin);                              
-    FL.attach(FL_pin);                             
-    BR.attach(BR_pin);                              
-    BL.attach(BL_pin);                              
+    UR.attach(UR_pin);
+    UL.attach(UL_pin);
+    UB.attach(UB_pin);
+    FR.attach(FR_pin);
+    FL.attach(FL_pin);
+    BR.attach(BR_pin);
+    BL.attach(BL_pin);
     Motors::stop();  // do not run the motors untill `start()` is called
     brSensor = psensor; // catch the pressure sensor object
     imuSensor = imu; // catch the imu sensor object
     savePressure = false;
     reqPress = brSensor.pressure();
+    powerMode = 1;
 }
 
 //function for pitch power calculation
@@ -113,8 +117,11 @@ void Motors::stop(){
   started = false;
 }
 
-void Motors::stopVertical(){
+void Motors::stopUp(){
   up = 0;
+}
+
+void Motors::stopDown(){
   down = 0;
 }
 
@@ -124,4 +131,24 @@ void Motors::goUp(){
 
 void Motors::goDown(){
   down = 1;
+}
+
+void Motors::setPower(int powerMode){
+  float mul = 1.0;
+  switch(powerMode){
+    case 1: mul = 1.0; break;
+    case 2: mul = 2.0; break;
+    case 3: mul = 2.5; break;
+    default: powerMode = 1;
+  }
+
+  UR.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
+  UL.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
+  UB.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
+  FR.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
+  FL.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
+  BR.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
+  BL.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
+
+  this->powerMode = powerMode;
 }

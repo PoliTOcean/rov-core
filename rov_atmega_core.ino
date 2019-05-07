@@ -43,7 +43,7 @@ void setup() {
     delay(1000);
 
     /** MOTORS INIT **/
-    motors.configure(brSensor,imu);       // initialize motors
+    motors.configure(brSensor, imu);       // initialize motors
     
     delay(3000);                          // delay of 1 second to make actions complete
 
@@ -120,22 +120,22 @@ ISR (SPI_STC_vect)
           motors_->goDown();
         break;
         case Actions::VDOWN_OFF:
-          motors_->stopVertical();
+          motors_->stopDown();
         break;
         case Actions::VUP_ON:
           motors_->goUp();
         break;
         case Actions::VUP_OFF:
-          motors_->stopVertical();
+          motors_->stopUp();
         break;
         case Actions::FAST:
-          motors_->velocity = 3;
+          motors_->setPower(3);
         break;
         case Actions::MEDIUM:
-          motors_->velocity = 2;
+          motors_->setPower(2);
         break;
         case Actions::SLOW:
-          motors_->velocity = 1;
+          motors_->setPower(1);
         break;
        }
       nextIsButton = false; // last command
