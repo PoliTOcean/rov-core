@@ -8,7 +8,7 @@
 
 #include "Arduino.h"
 #include "DumpedCurrentMotor.h"
-#include "MS5837.h"
+#include "PressureSensor.h"
 #include "IMU.h"
 
 class Motors {

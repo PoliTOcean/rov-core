@@ -1,13 +1,13 @@
 #include "Arduino.h"
 #include "Servo.h"
-#ifndef _LIMIT_CURRENT_H
-#define _LIMIT_CURRENT_H
+#ifndef POLITOCEAN_LIMIT_CURRENT_H
+#define POLITOCEAN_LIMIT_CURRENT_H
 
 //useful constants
 #define DEFAULT_PERC      10                                        // default percentage of the step
 #define DEFAULT_MAX_PERC  30                                        // default max for the percentage for the step          
-#define DEFAULT_MAX_VAL   1900					 	                          // default max value for the actual value
-#define DEFAULT_MIN_VAL   1100                                      // default min value for the actual value
+#define DEFAULT_MAX_VAL   1700					 	                          // default max value for the actual value
+#define DEFAULT_MIN_VAL   1300                                      // default min value for the actual value
 #define DEFAULT_INT_VAL   15624                                     // default value for compare register  
 #define SERVO_STOP_VALUE  1500                                      // default servo stop value
 #define MAX_PIN           13                                        // max pin attachable to the motor
