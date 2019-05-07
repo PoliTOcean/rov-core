@@ -25,20 +25,34 @@ Motors motors;  // motors manager
 
 void setup() {
     Serial.begin(9600);                   // initialize comunication via the serial port
+
+    /** SENSORS CONFIGURATION **/
+    for (auto sensor_type : sensor_t()) // create sensors array
+        sensors.push_back(Sensor<byte>(sensor_type, 0));
+    s = sensor_t::First;              // set the sensor counter
+
     imu.configure();                      // initialize IMU sensor
-    brSensor.init();                      // initialize pressure sensor
+
+    delay(1000);
+    
     brSensor.setModel(MS5837::MS5837_30BA);
     brSensor.setFluidDensity(997);        // kg/m^3 (freshwater, 1029 for seawater)
+    brSensor.init();                      // initialize pressure sensor
+
+    delay(1000);
+
+    /** MOTORS INIT **/
     motors.configure(brSensor,imu);       // initialize motors
-    delay(1000);                          // delay of 1 second to make actions complete
+    
+    delay(3000);                          // delay of 1 second to make actions complete
+
+    /** SPI SETUP **/
+    cli();
     pinMode(MISO, OUTPUT);                // SPI setup
     SPCR |= _BV(SPE);
     SPDR = 0xFF;                          // set the SPI data register to 0xFF before sending sensors data
     SPI.attachInterrupt();                // enable SPI
-    
-    for (auto sensor_type : sensor_t()) // create sensors array
-        sensors.push_back(Sensor<byte>(sensor_type, 0));
-    s = sensor_t::First;              // set the sensor counter
+    sei();
 }
 
 void sensorsRead(){

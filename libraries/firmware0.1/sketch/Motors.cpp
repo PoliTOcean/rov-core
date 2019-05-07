@@ -15,7 +15,6 @@
 
 
 void Motors::configure(MS5837 psensor, IMU imu){
-    cli();                                        //stop interrupts
     // attach motors
     UR.attach(UR_pin);                              
     UL.attach(UL_pin);                              
@@ -24,7 +23,6 @@ void Motors::configure(MS5837 psensor, IMU imu){
     FL.attach(FL_pin);                             
     BR.attach(BR_pin);                              
     BL.attach(BL_pin);                              
-    sei();
     Motors::stop();  // do not run the motors untill `start()` is called
     brSensor = psensor; // catch the pressure sensor object
     imuSensor = imu; // catch the imu sensor object
