@@ -92,8 +92,6 @@ ISR (SPI_STC_vect)
     static Motors* motors_ = &motors;
     
     c = SPDR;
-
-    Serial.println(c);
     
     // Prepare the next sensor's value to send through SPI
     SPDR = sensors[static_cast<int>(s)].getValue();
@@ -109,12 +107,7 @@ ISR (SPI_STC_vect)
     }
     
 
-    if(nextIsButton){
-      
-      /* DEBUG */
-      Serial.print("\tButton received:\t");
-      Serial.println(c);
-      
+    if(nextIsButton){      
       // process the nextIsButton
       switch(c){
         case Actions::START_AND_STOP:
