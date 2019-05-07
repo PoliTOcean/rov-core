@@ -15,7 +15,8 @@ class Motors {
   public:
     volatile byte x,y,rz;
     volatile bool started;
-    volatile int up,down;
+    volatile float up;
+    volatile int down;
     volatile int powerMode;
         
     void configure(MS5837 psensor, IMU imu);
@@ -27,6 +28,8 @@ class Motors {
     void stopDown();
     void goUp();
     void goDown();
+    void goUpFast();
+    void stopUpFast();
 
     void setPower(int power);
     

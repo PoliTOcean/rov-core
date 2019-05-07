@@ -24,11 +24,20 @@ list_Motor* list = NULL;
  *
  *  @param max value
  *  @param min value
+ *  @param power
  *  @param percentage of step
  *
  *  @return void
  */
-void Motor::init(int in_minval, int in_maxval, int power = DEFAULT_POWER/*, int perc = DEFAULT_PERC*/)
+void Motor::init(int in_minval, int in_maxval){
+  init(in_minval, in_maxval, DEFAULT_POWER, DEFAULT_PERC);
+}
+
+void Motor::init(int in_minval, int in_maxval, int power){
+  init(in_minval, in_maxval, power, DEFAULT_PERC);
+}
+
+void Motor::init(int in_minval, int in_maxval, int power, int perc)
 {
   /*
   //Timer setup
@@ -87,6 +96,7 @@ void Motor::attach(int pin){
 void Motor::detach(){
   this->pin   = -1;
   this->value = SERVO_STOP_VALUE;
+  this->reach_value = this->value;
   
   this->motor.writeMicroseconds(SERVO_STOP_VALUE);
   this->motor.detach();

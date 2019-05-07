@@ -34,8 +34,8 @@ class Motor {
       /*volatile*/ int code;                                                      // univoque value of the motor
       /*volatile*/ int pin;                                                       // pin where the motor is attached to
       /*volatile*/ Servo motor;                                                   // Servo instance
-      /*volatile*/ int in_minval;
-      /*volatile*/ int in_maxval;
+      volatile int in_minval;
+      volatile int in_maxval;
 
    public:
       Motor();
@@ -49,7 +49,9 @@ class Motor {
       int get_minval();
       int get_code();
       int get_pin();
-      void init(int in_minval, int in_maxval, int power/*, int perc*/);
+      void init(int in_minval, int in_maxval);
+      void init(int in_minval, int in_maxval, int power);
+      void init(int in_minval, int in_maxval, int power, int perc);
       void attach(int pin);
       void detach();
       bool update();

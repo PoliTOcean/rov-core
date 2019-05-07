@@ -128,6 +128,12 @@ ISR (SPI_STC_vect)
         case Actions::VUP_OFF:
           motors_->stopUp();
         break;
+        case Actions::VUP_FAST_ON:
+          motors_->goUpFast();
+        break;
+        case Actions::VUP_FAST_OFF:
+          motors_->stopUpFast();
+        break;
         case Actions::FAST:
           motors_->setPower(3);
         break;
