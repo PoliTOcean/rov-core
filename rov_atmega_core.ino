@@ -93,6 +93,8 @@ ISR (SPI_STC_vect)
     
     c = SPDR;
 
+    Serial.println(c);
+    
     // Prepare the next sensor's value to send through SPI
     SPDR = sensors[static_cast<int>(s)].getValue();
 
