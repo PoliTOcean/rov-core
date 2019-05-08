@@ -13,7 +13,6 @@
 
 class Motors {
   public:
-    volatile byte x,y,rz;
     volatile bool started;
     volatile float up;
     volatile int down;
@@ -23,6 +22,10 @@ class Motors {
 
     void start();
     void stop();
+
+    void setX(byte x);
+    void setY(byte y);
+    void setRz(byte rz);
     
     void stopUp();
     void stopDown();
@@ -46,6 +49,8 @@ class Motors {
     const int signUB = 1;
 
     Motor FL, FR, BL, BR, UR, UL, UB;
+
+    volatile byte x,y,rz;
     
     MS5837 brSensor;
     bool savePressure;

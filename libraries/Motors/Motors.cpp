@@ -1,8 +1,10 @@
 #include "Arduino.h"
 #include "Motors.h"
 
-#define AXES_MAX  127
-#define AXES_MIN -126
+#define IN_AXES_MIN 1
+#define IN_AXES_MAX 254
+#define AXES_MAX    127
+#define AXES_MIN    -126
 
 #define UR_pin  7
 #define UL_pin  2
@@ -151,6 +153,18 @@ void Motors::stopUpFast(){
 
 void Motors::goDown(){
   down = 1;
+}
+
+void Motors::setX(byte x){
+  this->x = map(x, IN_AXES_MIN, IN_AXES_MAX, AXES_MIN, AXES_MAX);
+}
+
+void Motors::setY(byte y){
+  this->y = map(y, IN_AXES_MIN, IN_AXES_MAX, AXES_MIN, AXES_MAX);
+}
+
+void Motors::setRz(byte rz){
+  this->rz = map(rz, IN_AXES_MIN, IN_AXES_MAX, AXES_MIN, AXES_MAX);
 }
 
 void Motors::setPower(int powerMode){
