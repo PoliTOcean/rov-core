@@ -6,13 +6,13 @@
 #define AXES_MAX    127
 #define AXES_MIN    -126
 
-#define UR_pin  8
-#define UL_pin  7
-#define UB_pin  4
-#define FR_pin  5
-#define FL_pin  6
-#define BR_pin  3
-#define BL_pin  2
+#define UR_pin  7
+#define UL_pin  2
+#define UB_pin  8
+#define FR_pin  6
+#define FL_pin  3
+#define BR_pin  4
+#define BL_pin  5
 
 #define kAng  15
 #define V_MUL 80

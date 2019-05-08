@@ -2,6 +2,9 @@
 #include "Servo.h"
 #include "Arduino.h"
 
+#define MAX_VAL 127
+#define MIN_VAL -127
+
 /*
  * in the vect vector are saved all the instances of the motor that will be create in the following way
  * Motor code    |   0    |   1    |   2    |   3    |   4    |   5    |   6   |
@@ -24,22 +27,12 @@ list_Motor* list = NULL;
  *
  *  @param max value
  *  @param min value
- *  @param power
  *  @param percentage of step
  *
  *  @return void
  */
-void Motor::init(int in_minval, int in_maxval){
-  init(in_minval, in_maxval, DEFAULT_POWER, DEFAULT_PERC);
-}
-
-void Motor::init(int in_minval, int in_maxval, int power){
-  init(in_minval, in_maxval, power, DEFAULT_PERC);
-}
-
-void Motor::init(int in_minval, int in_maxval, int power, int perc)
+void Motor::init(int in_minval, int in_maxval, int power = DEFAULT_POWER, int perc = DEFAULT_PERC)
 {
-  /*
   //Timer setup
   cli();
   TCCR2A = 0;                                    // set entire TCCR1A register to 0
@@ -49,23 +42,23 @@ void Motor::init(int in_minval, int in_maxval, int power, int perc)
   TCCR2B |= (1 << WGM22);                        // turn on CTC mode
   TCCR2B |= (1 << CS22) | (1 << CS20);           // Set CS12 and CS10 bits for 1024 prescaler
   TIMSK2 |= (0 << OCIE2A);                       // enable timer compare interrupt
-  //*/
+
 
   this->in_minval = in_minval;
   this->in_maxval = in_maxval;
-
+  
   //boundaries check
   if(power < 0) power = 0;
   else if (power >= MAX_POWER) power = MAX_POWER;
 
   this->maxval      = SERVO_STOP_VALUE + power;
   this->minval      = SERVO_STOP_VALUE - power;
-
-  /*percentage check
+  
+  //percentage check
   if (perc >= DEFAULT_MAX_PERC)
     perc = DEFAULT_MAX_PERC;
   else if (perc <= 0)
-    perc = DEFAULT_PERC; 
+    perc = DEFAULT_PERC;
 
   //boundaries and step setup
   this->step        = (this->maxval - this->minval) * perc / 100;
@@ -73,7 +66,9 @@ void Motor::init(int in_minval, int in_maxval, int power, int perc)
   //functional values setup
   this->value       = SERVO_STOP_VALUE;
   this->reach_value = this->value;
-  sei(); //*/
+
+  //final motor setup
+  sei();
 }
 
 
@@ -96,7 +91,6 @@ void Motor::attach(int pin){
 void Motor::detach(){
   this->pin   = -1;
   this->value = SERVO_STOP_VALUE;
-  this->reach_value = this->value;
   
   this->motor.writeMicroseconds(SERVO_STOP_VALUE);
   this->motor.detach();
@@ -150,17 +144,12 @@ void Motor::set_value(int val)                                      // set the n
 {
   if (val > this->in_minval) val = this->in_minval;                         // saturation max value
   if (val < this->in_maxval) val = this->in_maxval;                         // stauration min value
-  this->reach_value = map(val, this->in_minval, this->in_maxval, this->minval, this->maxval);
+  this->reach_value = map(val, MIN_VAL, MAX_VAL, this->minval, this->maxval);
 
-  /* DEBUG 
-  Serial.print("\tMotor reach value:\t");
-  Serial.println(this->reach_value);
-  
   if (!this->update()){
     insert(this->code);
     TIMSK2 |= (1 << OCIE2A);
-  }*/
-  this->motor.writeMicroseconds(this->reach_value);
+  }
 }
 
 
@@ -169,18 +158,13 @@ bool Motor::is_value_reached(){
   return this->value == this->reach_value;
 }
 
-
 /** constructor **/
-Motor::Motor()
+Motor::Motor() : code(i), pin(-1)
 {
   //motor setup
-  this->code        = i;
   vect[i] = this;
   i++;
-
-  this->pin = -1;
 }
-
 
 /** getters **/
 int Motor::get_pin(){

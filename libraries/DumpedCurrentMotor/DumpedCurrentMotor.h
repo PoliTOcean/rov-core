@@ -26,18 +26,18 @@
  */
 class Motor {
    private:
-      /*volatile*/ int value;                                            		    // current value
-      /*volatile*/ int reach_value;                                      		    // value to reach
-      /*volatile*/ int step;						                                     // step of the DumpedCurrentMotor
-      /*volatile*/ int maxval;                                           		    // maximum value of the DumpedCurrentMotor
-      /*volatile*/ int minval;                                                    // minimum value of the DumpedCurrentMotor
-      /*volatile*/ int code;                                                      // univoque value of the motor
-      /*volatile*/ int pin;                                                       // pin where the motor is attached to
-      /*volatile*/ Servo motor;                                                   // Servo instance
+      volatile int value;                                            		      // current value
+      volatile int reach_value;                                      		      // value to reach
+      volatile int step;						                                          // step of the DumpedCurrentMotor
+      volatile int maxval;                                           		      // maximum value of the DumpedCurrentMotor
+      volatile int minval;                                                    // minimum value of the DumpedCurrentMotor
+      volatile int code;                                                      // univoque value of the motor
+      volatile int pin;                                                       // pin where the motor is attached to
+      volatile Servo motor;                                                   // Servo instance
       volatile int in_minval;
       volatile int in_maxval;
 
-   public:
+   public:                           		      
       Motor();
       
       void set_value(int val);
@@ -49,9 +49,7 @@ class Motor {
       int get_minval();
       int get_code();
       int get_pin();
-      void init(int in_minval, int in_maxval);
-      void init(int in_minval, int in_maxval, int power);
-      void init(int in_minval, int in_maxval, int power, int perc);
+      void init(int in_minval, int in_maxval, int power = DEFAULT_POWER, int perc = DEFAULT_PERC);
       void attach(int pin);
       void detach();
       bool update();
