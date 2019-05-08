@@ -156,7 +156,7 @@ ISR (SPI_STC_vect)
        motors_->setY(c);
        break;
       
-       case 2:  //  read rz
+       case 2:        //  read rz
        motors_->setRz(c);
        break;
       }
