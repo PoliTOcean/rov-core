@@ -34,18 +34,18 @@ void setup() {
 
     imu.configure();                      // initialize IMU sensor
 
-    delay(100);
+    delay(1000);
     
     brSensor.setModel(MS5837::MS5837_30BA);
     brSensor.setFluidDensity(997);        // kg/m^3 (freshwater, 1029 for seawater)
     brSensor.init();                      // initialize pressure sensor
 
-    delay(100);
+    delay(1000);
 
     /** MOTORS INIT **/
     motors.configure(brSensor, imu);       // initialize motors
     
-    delay(1000);                          // delay of 1 second to make actions complete
+    delay(3000);                          // delay of 1 second to make actions complete
 
     /** SPI SETUP **/
     cli();
@@ -120,28 +120,28 @@ ISR (SPI_STC_vect)
           motors_->goDown();
         break;
         case Actions::VDOWN_OFF:
-//          motors_->stopDown();
+          motors_->stopDown();
         break;
         case Actions::VUP_ON:
           motors_->goUp();
         break;
         case Actions::VUP_OFF:
-     //     motors_->stopUp();
+          motors_->stopUp();
         break;
         case Actions::VUP_FAST_ON:
-    //      motors_->goUpFast();
+          motors_->goUpFast();
         break;
         case Actions::VUP_FAST_OFF:
-    //      motors_->stopUpFast();
+          motors_->stopUpFast();
         break;
         case Actions::FAST:
-   //       motors_->setPower(3);
+          motors_->setPower(3);
         break;
         case Actions::MEDIUM:
-     //     motors_->setPower(2);
+          motors_->setPower(2);
         break;
         case Actions::SLOW:
-       //   motors_->setPower(1);
+          motors_->setPower(1);
         break;
        }
       nextIsButton = false; // last command
@@ -149,18 +149,15 @@ ISR (SPI_STC_vect)
     }else{
       switch(receivedDataSelector){
        case 0:         //  read x
-//        motors_->setX(c);
-motors_->x = c-127;
+        motors_->setX(c);
        break;
       
        case 1:        // read y
-    //   motors_->setY(c);
-motors_->y = c-127;
+       motors_->setY(c);
        break;
       
        case 2:  //  read rz
-    //   motors_->setRz(c);
-motors_->rz = c-127;
+       motors_->setRz(c);
        break;
       }
       
