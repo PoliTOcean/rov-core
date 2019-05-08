@@ -143,15 +143,15 @@ ISR (SPI_STC_vect)
     }else{
       switch(receivedDataSelector){
        case 0:         //  read x
-        motors_->x = c-127;
+        motors_->x = map(c, 1, 127,-127,127);
        break;
       
        case 1:        // read y
-       motors_->y = c-127;
+       motors_->y = map(c, 1, 127,-127,127);
        break;
       
        case 2:  //  read rz
-       motors_->rz = c-127;
+       motors_->rz = map(c, 1, 127,-127,127);
        break;
       }
       
