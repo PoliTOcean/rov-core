@@ -25,6 +25,8 @@ Motors motors;  // motors manager
 using namespace Commands;
 
 void setup() {
+   // analogReference(INTERNAL);
+    
     Serial.begin(9600);                   // initialize comunication via the serial port
 
     /** SENSORS CONFIGURATION **/
@@ -82,7 +84,8 @@ void loop() {
     updatedAxis=false;
   }
   motors.evaluateVertical();
-  
+
+  //Serial.println((float)analogRead(A0) / (float)2.046);
  // now = micros()-now;
  // Serial.println((float)now/1000);
 }
