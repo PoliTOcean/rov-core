@@ -48,6 +48,8 @@ namespace Commands
     const unsigned char AUTONOMOUS_ON      = 0x10;
     const unsigned char AUTONOMOUS_OFF     = 0x11;
     const unsigned char START_AND_STOP     = 0x12;
+    const unsigned char VUP_FAST_ON        = 0x13;
+    const unsigned char VUP_FAST_OFF       = 0x14;
     
     const unsigned char NONE               = 0x00;
   }

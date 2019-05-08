@@ -1,33 +1,48 @@
 #include "Arduino.h"
 #include "Motors.h"
 
-#define UR_pin  4
-#define UL_pin  5
-#define UB_pin  6
-#define FR_pin  11
-#define FL_pin  12
-#define BR_pin  13
-#define BL_pin  14
+#define AXES_MAX  127
+#define AXES_MIN -126
 
-#define kAng 0.5
-#define V_MUL 50
-#define kDep 0.5
+#define UR_pin  7
+#define UL_pin  2
+#define UB_pin  8
+#define FR_pin  6
+#define FL_pin  3
+#define BR_pin  4
+#define BL_pin  5
+
+#define kAng  15
+#define V_MUL 80
+#define kDep  20
 
 
 void Motors::configure(MS5837 psensor, IMU imu){
     // attach motors
-    UR.attach(UR_pin);                              
-    UL.attach(UL_pin);                              
-    UB.attach(UB_pin);                              
-    FR.attach(FR_pin);                              
-    FL.attach(FL_pin);                             
-    BR.attach(BR_pin);                              
-    BL.attach(BL_pin);                              
+    UR.attach(UR_pin);
+    UL.attach(UL_pin);
+    UB.attach(UB_pin);
+    FR.attach(FR_pin);
+    FL.attach(FL_pin);
+    BR.attach(BR_pin);
+    BL.attach(BL_pin);
+
+    UR.init(AXES_MIN, AXES_MAX);
+    UL.init(AXES_MIN, AXES_MAX);
+    UB.init(AXES_MIN, AXES_MAX);
+    FR.init(AXES_MIN, AXES_MAX);
+    FL.init(AXES_MIN, AXES_MAX);
+    BR.init(AXES_MIN, AXES_MAX);
+    BL.init(AXES_MIN, AXES_MAX);
+
     Motors::stop();  // do not run the motors untill `start()` is called
     brSensor = psensor; // catch the pressure sensor object
     imuSensor = imu; // catch the imu sensor object
     savePressure = false;
     reqPress = brSensor.pressure();
+    powerMode = 1;
+
+    configured = true;
 }
 
 //function for pitch power calculation
@@ -46,6 +61,7 @@ float Motors::calcRollPower(){
 
 //function to evaluate vertical motors values
 void Motors::evaluateVertical(){
+   if(!configured) return;
 
    float pitchPower, rollPower;
    if(!started){
@@ -55,21 +71,21 @@ void Motors::evaluateVertical(){
    }
 
    //call above functions for calculations
-   pitchPower = calcPitchPower();
-   rollPower = calcRollPower();
+   pitchPower = calcPitchPower()  / powerMode;
+   rollPower  = calcRollPower()   / powerMode;
    
    //value for up-down movement
    int valUD=0;            //reset valUD
-   if(down || up){         //controlled up-down from joystick
+   if(down>0 || up>0){     //controlled up-down from joystick
      savePressure = true;                           //it has to save pressure when finished
-     valUD = (up-down)*(V_MUL/* TO DO +fastV*FAST_V*/); //fixed value depending on buttons pressed
+     valUD = (up-down)*V_MUL; //fixed value depending on buttons pressed
    }else if(savePressure){
      reqPress = brSensor.pressure();
      savePressure = false;
    } //else, if it is not (still) pressing up/down buttons
    
    if(!savePressure) //change value for autoquote
-     valUD = (reqPress-brSensor.pressure())*kDep;
+     valUD = (reqPress-brSensor.pressure())*kDep / powerMode;
  
    //adding values for UD movement/autoquote
    UL.set_value(valUD - pitchPower - rollPower);
@@ -113,8 +129,11 @@ void Motors::stop(){
   started = false;
 }
 
-void Motors::stopVertical(){
+void Motors::stopUp(){
   up = 0;
+}
+
+void Motors::stopDown(){
   down = 0;
 }
 
@@ -122,6 +141,36 @@ void Motors::goUp(){
   up = 1;
 }
 
+void Motors::goUpFast(){
+  up = 1.5;
+}
+
+void Motors::stopUpFast(){
+  up = 1;
+}
+
 void Motors::goDown(){
   down = 1;
+}
+
+void Motors::setPower(int powerMode){
+  if(!configured) return;
+
+  float mul = 1.0;
+  switch(powerMode){
+    case 1: mul = 1.0; break;
+    case 2: mul = 2.0; break;
+    case 3: mul = 2.5; break;
+    default: powerMode = 1;
+  }
+
+  UR.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
+  UL.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
+  UB.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
+  FR.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
+  FL.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
+  BR.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
+  BL.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
+
+  this->powerMode = powerMode;
 }

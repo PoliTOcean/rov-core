@@ -15,17 +15,23 @@ class Motors {
   public:
     volatile byte x,y,rz;
     volatile bool started;
-    volatile int up,down;
-    volatile int velocity;
-    
-    void configure(MS5837 psensor,IMU imu);
+    volatile float up;
+    volatile int down;
+    volatile int powerMode;
+        
+    void configure(MS5837 psensor, IMU imu);
 
     void start();
     void stop();
     
-    void stopVertical();
+    void stopUp();
+    void stopDown();
     void goUp();
     void goDown();
+    void goUpFast();
+    void stopUpFast();
+
+    void setPower(int power);
     
     void evaluateVertical();
     void evaluateHorizontal();
@@ -44,7 +50,9 @@ class Motors {
     MS5837 brSensor;
     bool savePressure;
     float reqPress;
-  
+
+    bool configured = false;
+
     IMU imuSensor;
     float calcPitchPower();
     float calcRollPower();
