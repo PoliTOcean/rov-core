@@ -99,10 +99,12 @@ ISR (SPI_STC_vect)
     
     // Prepare the next sensor's value to send through SPI
     SPDR = sensors[static_cast<int>(s)].getValue();
-
+    
     // if I sent the last sensor, reset current sensor to first one.
-    if (++s >= sensor_t::Last)
+    if (s >= sensor_t::Last)
       s = sensor_t::First;
+    else
+      s++;
     
     if(c == 0x00){
       //the next incoming data is a button
