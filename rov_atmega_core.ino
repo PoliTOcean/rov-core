@@ -65,7 +65,8 @@ void sensorsRead(){
 }
 
 void sensorsPrepare(){
-  sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(brSensor.temperature());
+   float temperature = analogRead(A0)/2.046;
+  sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(static_cast<byte>(temperature));
   sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(brSensor.pressure());
   sensors[static_cast<int>(sensor_t::PITCH)].setValue(imu.pitch);
   sensors[static_cast<int>(sensor_t::ROLL)].setValue(imu.roll);
