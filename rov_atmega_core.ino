@@ -67,15 +67,16 @@ void sensorsRead(){
 void sensorsPrepare(){
   float temperature = analogRead(A0)/2.046;
 
-  sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue((byte) 1);
-  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue((byte) 2);
-  sensors[static_cast<int>(sensor_t::PITCH)].setValue((byte) 3);
-  sensors[static_cast<int>(sensor_t::ROLL)].setValue((byte) 4);
+  sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(static_cast<byte>(brSensor.pressure()/100));
+  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(static_cast<byte>(brSensor.pressure()/100));
+  sensors[static_cast<int>(sensor_t::PITCH)].setValue(static_cast<byte>(brSensor.pressure()/100));
+  sensors[static_cast<int>(sensor_t::ROLL)].setValue(static_cast<byte>(brSensor.pressure()/100));
+  
   /*
   sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(static_cast<byte>(temperature));
   sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(static_cast<byte>(brSensor.pressure()/100));
   sensors[static_cast<int>(sensor_t::PITCH)].setValue(static_cast<byte>(imu.pitch));
-  sensors[static_cast<int>(sensor_t::ROLL)].setValue(static_cast<byte>(imu.roll));*/
+  sensors[static_cast<int>(sensor_t::ROLL)].setValue(static_cast<byte>(imu.roll)); //*/
 }
 
 void loop() {
@@ -147,13 +148,13 @@ ISR (SPI_STC_vect)
           motors_->stopUpFast();
         break;
         case Actions::FAST:
-          motors_->setPower(3);
+          motors_->setPower(Motors::FAST);
         break;
         case Actions::MEDIUM:
-          motors_->setPower(2);
+          motors_->setPower(Motors::MEDIUM);
         break;
         case Actions::SLOW:
-          motors_->setPower(1);
+          motors_->setPower(Motors::SLOW);
         break;
        }
       nextIsButton = false; // last command
