@@ -65,11 +65,12 @@ void sensorsRead(){
 }
 
 void sensorsPrepare(){
-   float temperature = analogRead(A0)/2.046;
+  float temperature = analogRead(A0)/2.046;
+ 
   sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(static_cast<byte>(temperature));
-  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(brSensor.pressure());
-  sensors[static_cast<int>(sensor_t::PITCH)].setValue(imu.pitch);
-  sensors[static_cast<int>(sensor_t::ROLL)].setValue(imu.roll);
+  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(static_cast<byte>(brSensor.pressure()/100));
+  sensors[static_cast<int>(sensor_t::PITCH)].setValue(static_cast<byte>(imu.pitch));
+  sensors[static_cast<int>(sensor_t::ROLL)].setValue(static_cast<byte>(imu.roll));
 }
 
 void loop() {
@@ -104,7 +105,7 @@ ISR (SPI_STC_vect)
     if (s >= sensor_t::Last)
       s = sensor_t::First;
     else
-      s++;
+      ++s;
     
     if(c == 0x00){
       //the next incoming data is a button
