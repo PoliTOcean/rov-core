@@ -99,17 +99,17 @@ void sensorsPrepare(){
   Serial.println(")");*/
   
   sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(static_cast<byte>(temperature));
-  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(static_cast<byte>(currentPressure-980));
-  sensors[static_cast<int>(sensor_t::PITCH)].setValue(static_cast<byte>(imu.pitch));
-  sensors[static_cast<int>(sensor_t::ROLL)].setValue(static_cast<byte>(imu.roll));
+  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(static_cast<byte>(temperature));
+  sensors[static_cast<int>(sensor_t::PITCH)].setValue(static_cast<byte>(temperature));
+  sensors[static_cast<int>(sensor_t::ROLL)].setValue(static_cast<byte>(temperature));
 }
 
 void loop() {
   // prepare data to send back via spi
  // unsigned long now = micros();
 
-  if(micros()-now > (long)IMU_dT*1000000){    
-    now = micros();
+//  if(micros()-now > (long)IMU_dT*1000000){    
+ //   now = micros();
     sensorsRead();
   
     sensorsPrepare();
@@ -119,7 +119,7 @@ void loop() {
       updatedAxis=false;
     }
     motors.evaluateVertical(currentPressure);
-  }
+  //}
   //Serial.println((float)analogRead(A0) / (float)2.046);
  // now = micros()-now;
  // Serial.println((float)now/1000);
