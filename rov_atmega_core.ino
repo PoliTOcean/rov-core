@@ -125,16 +125,12 @@ void loop() {
   
   if (process)
   {
-     Serial.print("Next sensor:\t");
-     switch (s)
-     {
-        case sensor_t::ROLL: Serial.print("ROLL\t"); break;
-        case sensor_t::PITCH: Serial.print("PITCH\t"); break;
-        case sensor_t::TEMPERATURE: Serial.print("TEMEPRATURE\t"); break;
-        case sensor_t::PRESSURE: Serial.print("PRESSURE\t"); break;
-        default: break;
-     }
-     Serial.println(sensors[static_cast<int>(s)].getValue());
+    /** SENSORS CONFIGURATION **/
+    for (auto sensor_type : sensor_t()) // create sensors array
+        Serial.print(sensors[static_cast<int>(sensor_type)].getValue()), Serial.print("\t");
+    Serial.println("");
+    s = sensor_t::First;
+     process = false;
   }
  
   //Serial.println((float)analogRead(A0) / (float)2.046);
