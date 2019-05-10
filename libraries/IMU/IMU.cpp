@@ -2,23 +2,6 @@
 #include "Arduino.h"
 #include "IMU.h"
 
-#define MPU_ADDR      0x68
-#define ACCEL_XOUT_H  0x3B
-#define ACCEL_XOUT_L  0x3C
-#define ACCEL_YOUT_H  0x3D
-#define ACCEL_YOUT_L  0x3E
-#define ACCEL_ZOUT_H  0x3F
-#define ACCEL_ZOUT_L  0x40
-#define TEMP_OUT_H    0x41
-#define TEMP_OUT_L    0x42
-#define GYRO_XOUT_H   0x43
-#define GYRO_XOUT_L   0x44
-#define GYRO_YOUT_H   0x45
-#define GYRO_YOUT_L   0x46
-#define GYRO_ZOUT_H   0x47
-#define GYRO_ZOUT_L   0x48
-
-
 void IMU::configure(){
   Wire.begin();
   Wire.beginTransmission(MPU_ADDR);
@@ -37,9 +20,9 @@ void IMU::complementaryFilter(){
     lastUpdate = micros(); // update `lastUpdate` for the next iteration
     
     // add real dt with micros
-    droll = -Gx * dt;   // Angle around the X-axis (upside-down)
-    dpitch = -Gy * dt;  // Angle around the Y-axis (upside-down)
-    dyaw = Gz * dt;    // Angle around the Z-axis
+    droll   = -Gx * IMU_dT;   // Angle around the X-axis (upside-down)
+    dpitch  = -Gy * IMU_dT;   // Angle around the Y-axis (upside-down)
+    dyaw    =  Gz * IMU_dT;   // Angle around the Z-axis
 
     cdr=cos(droll);
     cdp=cos(dpitch);
@@ -67,8 +50,6 @@ void IMU::complementaryFilter(){
         roll = roll * 0.9 + rollAcc * 0.1;
         pitch = pitch * 0.9 + pitchAcc * 0.1;   
     }
-
-    dt = 0;
 }
 
 
@@ -93,15 +74,16 @@ void IMU::imuRead(){
 
   //scale temperature
   Tmp = (Tmp/340.00+36.53);
-  // Convert the data
-  Ax = float(Ax - 1089.4)/16436;
-  Ay = float(Ay + 496.4)/16357;
-  Az = float(Az + 1396.8)/16802.6;
 
   // Convert the data
-  Gx = (Gx + 159.07)/1800; //2700 @10ms
-  Gy = (Gy - 115.9)/1600; //2500 @10ms
-  Gz= (Gz + 141.44)/1600; //2500 @10ms
+  Ax = int(Ax - 328.063)/16895.24;
+  Ay = int(Ay - 335.44)/16604.259;
+  Az = -int(Az - 1490.462)/16954.01;
+
+  // Convert the data
+  Gx = (Gx - 349.262)/3300;
+  Gy = (Gy - 154.551)/3350;
+  Gz = (Gz + 176.136)/3200;
   
   complementaryFilter(); //call calculation function
 }

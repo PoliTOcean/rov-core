@@ -1,4 +1,4 @@
-
+#include <RBD_Timer.h>  //library for custom timer
 #include <Array.h>
 #include <SPI.h>
 #include "IMU.h"
@@ -9,6 +9,8 @@
 
 #define SENSORS_SIZE static_cast<int>(sensor_t::Last)+1
 
+RBD::Timer timer;         //needed for the IMU reading process: it tells us when a certain timeout is expired 
+
 volatile sensor_t s;  // sensor counter
 volatile Array<Sensor<byte>, SENSORS_SIZE> sensors; // array of sensors
 
@@ -16,8 +18,6 @@ volatile bool updatedAxis = false;
 volatile byte c;
 volatile bool nextIsButton = false;
 volatile int receivedDataSelector = 0;
-
-volatile bool process = false;
 
 volatile float currentPressure;
 
@@ -62,6 +62,9 @@ void setup() {
     SPDR = 0xFF;                          // set the SPI data register to 0xFF before sending sensors data
     SPI.attachInterrupt();                // enable SPI
     sei();
+
+    timer.setTimeout(IMU_dT*1000);
+    timer.restart();
 }
 
 void sensorsRead(){
@@ -105,6 +108,9 @@ void loop() {
   // prepare data to send back via spi
  // unsigned long now = micros();
 
+  if(!timer.isExpired()) return;
+  timer.restart();
+  
   sensorsRead();
 
   sensorsPrepare();
@@ -114,21 +120,6 @@ void loop() {
     updatedAxis=false;
   }
   motors.evaluateVertical(currentPressure);
-   
-  if (process)
-  {
-     Serial.print("Next sensor: ");
-     switch (s)
-     {
-        case sensor_t::ROLL: Serial.print("ROLL "); break;
-        case sensor_t::PITCH: Serial.print("PITCH "); break;
-        case sensor_t::TEMPERATURE: Serial.print("TEMEPRATURE "); break;
-        case sensor_t::PRESSURE: Serial.print("PRESSURE "); break;
-        default: break;
-     }
-     Serial.println(sensors[static_cast<int>(s)].getValue());
-  }
-  process = false;
 
  
   //Serial.println((float)analogRead(A0) / (float)2.046);
@@ -143,10 +134,10 @@ ISR (SPI_STC_vect)
     c = SPDR;
     
     // Prepare the next sensor's value to send through SPI
-    SPDR = sensors[static_cast<int>(s)].getValue();
+    SPDR = sensors[static_cast<int>(s++)].getValue();
     
     // if I sent the last sensor, reset current sensor to first one.
-    if (++s > sensor_t::Last)
+    if (s >= sensor_t::Last)
       s = sensor_t::First;
     
     if(c == 0x00){
@@ -196,7 +187,7 @@ ISR (SPI_STC_vect)
       nextIsButton = false; // last command
       receivedDataSelector = 0; // restart from x
     }else{
-      switch(receivedDataSelector){
+      switch(receivedDataSelector++){
        case 0:         //  read x
         motors_->setX(c);
        break;
@@ -210,11 +201,9 @@ ISR (SPI_STC_vect)
        break;
       }
       
-      if (++receivedDataSelector > 2)
+      if (receivedDataSelector >= 3)
         receivedDataSelector = 0;
 
       updatedAxis = true;
     }
-   
-    process = true;
 }

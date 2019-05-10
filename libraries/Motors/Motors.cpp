@@ -78,7 +78,7 @@ void Motors::evaluateVertical(float current_pressure){
    
    if(!savePressure) //change value for autoquote
      autoQuote = -(requested_pressure-current_pressure)*kDep;
-  
+
    //adding values for UD movement/autoquote
    UL.set_value(valUD + ( autoQuote - pitchPower - rollPower) / mulPower[powerMode] );
    UR.set_value(valUD + ( autoQuote - pitchPower + rollPower) / mulPower[powerMode] );
