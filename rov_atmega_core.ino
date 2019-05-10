@@ -67,6 +67,8 @@ void setup() {
 
     timer.setTimeout(IMU_dT*1000);
     timer.restart();
+
+    Serial.println("Ciao...");
 }
 
 void sensorsRead(){
