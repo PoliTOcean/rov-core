@@ -153,6 +153,19 @@ ISR (SPI_STC_vect)
     
     c = SPDR;
 
+   
+        
+    process = true;
+    
+    if(c == 0x00){
+      //the next incoming data is a button
+      nextIsButton=true;
+    }
+    else if (c==0xFF) {
+      nextIsAxes = true;
+      receivedDataSelector = 0;
+    }
+
     if (initial_ack)
     {
       SPDR = 0xFF;
@@ -168,19 +181,8 @@ ISR (SPI_STC_vect)
     if (++s > sensor_t::Last){
       initial_ack = true;
     }
-        
-    process = true;
-    
-    if(c == 0x00){
-      //the next incoming data is a button
-      nextIsButton=true;
-      reti();
-    }
-    else if (c==0xFF) {
-      nextIsAxes = true;
-      receivedDataSelector = 0;
-      reti();
-    }
+
+    if(c==0x00 || c==0xFF) reti();
     
 
     if(nextIsButton){      
