@@ -12,7 +12,10 @@
 RBD::Timer timer;         //needed for the IMU reading process: it tells us when a certain timeout is expired 
 
 volatile sensor_t s;  // sensor counter
-volatile Array<Sensor<byte>, SENSORS_SIZE> sensors; // array of sensors
+volatile Array<Sensor<volatile byte>, SENSORS_SIZE> sensors; // array of sensors
+
+
+volatile Array<volatile sensor_t, 130> queue;
 
 volatile bool updatedAxis = false;
 volatile byte c;
@@ -39,7 +42,7 @@ void setup() {
 
     /** SENSORS CONFIGURATION **/
     for (auto sensor_type : sensor_t()) // create sensors array
-        sensors.push_back(Sensor<byte>(sensor_type, 0));
+        sensors.push_back(Sensor<volatile byte>(sensor_type, 0));
     s = sensor_t::First;              // set the sensor counter
 
     imu.configure();                      // initialize IMU sensor
@@ -100,10 +103,10 @@ void sensorsPrepare(){
   Serial.print((int)static_cast<byte>((int)imu.roll));
   Serial.println(")");*/
   
-  sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(static_cast<byte>(temperature));
-  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(static_cast<byte>(currentPressure-980));
-  sensors[static_cast<int>(sensor_t::PITCH)].setValue(static_cast<byte>(imu.pitch));
-  sensors[static_cast<int>(sensor_t::ROLL)].setValue(static_cast<byte>(imu.roll));
+  sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(static_cast<volatile byte>(temperature));
+  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(static_cast<volatile byte>(currentPressure-980));
+  sensors[static_cast<int>(sensor_t::PITCH)].setValue(static_cast<volatile byte>(imu.pitch));
+  sensors[static_cast<int>(sensor_t::ROLL)].setValue(static_cast<volatile byte>(imu.roll));
 }
 
 void loop() {
@@ -123,11 +126,11 @@ void loop() {
   }
   motors.evaluateVertical(currentPressure);
   
-  if (process)
+  if (process && queue.size()>100)
   {
     /** SENSORS CONFIGURATION **/
-    for (auto sensor_type : sensor_t()) // create sensors array
-        Serial.print(sensors[static_cast<int>(sensor_type)].getValue()), Serial.print("\t");
+    for (int i=0; i<queue.size(); i++) // create sensors array
+        Serial.print(static_cast<int>(queue[i])), Serial.print("\n");
     Serial.println("");
     s = sensor_t::First;
      process = false;
@@ -145,11 +148,13 @@ ISR (SPI_STC_vect)
     c = SPDR;
     
     // Prepare the next sensor's value to send through SPI
-    SPDR = sensors[static_cast<int>(s++)].getValue();
+    SPDR = sensors[static_cast<int>(s)].getValue();
     
     // if I sent the last sensor, reset current sensor to first one.
-    if (s >= sensor_t::Last)
+    if (++s > sensor_t::Last)
       s = sensor_t::First;
+
+    queue.push_back(s);
     
     process = true;
     
