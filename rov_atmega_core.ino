@@ -67,11 +67,7 @@ void sensorsRead(){
 void sensorsPrepare(){
   float temperature = analogRead(A1)/2.046;
 
-  sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(static_cast<byte>((int)(brSensor.depth()*10)));
-  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(static_cast<byte>((int)(brSensor.depth()*10)));
-  sensors[static_cast<int>(sensor_t::PITCH)].setValue(static_cast<byte>((int)(brSensor.depth()*10)));
-  sensors[static_cast<int>(sensor_t::ROLL)].setValue(static_cast<byte>((int)(brSensor.depth()*10)));
-
+/*
   Serial.print("Temperature: ");
   Serial.print(temperature);
   Serial.print(" °C (");
@@ -90,12 +86,12 @@ void sensorsPrepare(){
   Serial.print(imu.roll);
   Serial.print(" ° (");
   Serial.print((int)static_cast<byte>((int)imu.roll));
-  Serial.println(")");
-  /*
+  Serial.println(")");*/
+  
   sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(static_cast<byte>(temperature));
-  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(static_cast<byte>(brSensor.pressure()/100));
+  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(static_cast<byte>(brSensor.pressure()/10));
   sensors[static_cast<int>(sensor_t::PITCH)].setValue(static_cast<byte>(imu.pitch));
-  sensors[static_cast<int>(sensor_t::ROLL)].setValue(static_cast<byte>(imu.roll)); //*/
+  sensors[static_cast<int>(sensor_t::ROLL)].setValue(static_cast<byte>(imu.roll));
 }
 
 void loop() {
@@ -112,8 +108,7 @@ void loop() {
   }
   motors.evaluateVertical();
 
-  delay(50);
-
+ 
   //Serial.println((float)analogRead(A0) / (float)2.046);
  // now = micros()-now;
  // Serial.println((float)now/1000);
