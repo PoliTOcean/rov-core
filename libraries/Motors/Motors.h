@@ -44,10 +44,8 @@ class Motors {
 
     void setPower(Motors::power pwr);
     
-    void evaluateVertical();
+    void evaluateVertical(float current_pressure);
     void evaluateHorizontal();
-
-    void setCurrentPressure(float currPress);
     
   protected:
     const int signFL = -1;
@@ -69,7 +67,6 @@ class Motors {
     MS5837 *brSensor;
     bool savePressure;
     float requested_pressure;
-    float current_pressure;
 
     bool configured = false;
 

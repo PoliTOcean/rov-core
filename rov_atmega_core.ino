@@ -101,13 +101,12 @@ void loop() {
   sensorsRead();
 
   sensorsPrepare();
-
-  motors.setCurrentPressure(brSensor.pressure());
+  
   if(updatedAxis){
     motors.evaluateHorizontal();
     updatedAxis=false;
   }
-  motors.evaluateVertical();
+  motors.evaluateVertical(50.0);
 
  
   //Serial.println((float)analogRead(A0) / (float)2.046);

@@ -53,7 +53,7 @@ float Motors::calcRollPower(){
 }
 
 //function to evaluate vertical motors values
-void Motors::evaluateVertical(){
+void Motors::evaluateVertical(float current_pressure){
    if(!configured) return;
 
    float pitchPower, rollPower;
@@ -108,10 +108,6 @@ void Motors::evaluateHorizontal() {
   FR.set_value(signFR * (-y-x-rz));
   BL.set_value(signBL * (-y-x+rz));
   BR.set_value(signBR * (-y+x-rz));
-}
-
-void Motors::setCurrentPressure(float currPress){
-  current_pressure = currPress;
 }
 
 void Motors::start(){
