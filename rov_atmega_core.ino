@@ -45,7 +45,7 @@ void setup() {
     delay(1000);
 
     /** MOTORS INIT **/
-    motors.configure(brSensor, imu);       // initialize motors
+    motors.configure(&brSensor, imu);       // initialize motors
     
     delay(3000);                          // delay of 1 second to make actions complete
 
