@@ -22,6 +22,8 @@ volatile byte c;
 volatile bool nextIsButton = false;
 volatile int receivedDataSelector = 0;
 
+volatile bool initial_ack = false;
+
 volatile float currentPressure;
 
 volatile bool process = false;
@@ -146,16 +148,22 @@ ISR (SPI_STC_vect)
     static Motors* motors_ = &motors;
     
     c = SPDR;
-    
-    // Prepare the next sensor's value to send through SPI
-    SPDR = sensors[static_cast<int>(s)].getValue();
+
+    if (initial_ack)
+    {
+      SPDR = 0xFF;
+      initial_ack = 0;
+    }
+    else
+      // Prepare the next sensor's value to send through SPI
+      SPDR = sensors[static_cast<int>(s)].getValue();
     
     // if I sent the last sensor, reset current sensor to first one.
-    if (++s > sensor_t::Last)
+    if (++s > sensor_t::Last){
+      initial_ack = true;
       s = sensor_t::First;
-
-    queue.push_back(s);
-    
+    }
+        
     process = true;
     
     if(c == 0x00){
