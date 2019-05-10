@@ -1,4 +1,3 @@
-#include <RBD_Timer.h>  //library for custom timer
 #include <Array.h>
 #include <SPI.h>
 #include "IMU.h"
@@ -8,8 +7,6 @@
 #include "Commands.h"
 
 #define SENSORS_SIZE static_cast<int>(sensor_t::Last)+1
-
-RBD::Timer timer;         //needed for the IMU reading process: it tells us when a certain timeout is expired 
 
 volatile sensor_t s;  // sensor counter
 volatile Array<Sensor<byte>, SENSORS_SIZE> sensors; // array of sensors
@@ -21,7 +18,7 @@ volatile int receivedDataSelector = 0;
 
 volatile float currentPressure;
 
-volatile bool process = false;
+volatile bool isExpired = true;
 
 float temperature;
 
@@ -31,6 +28,8 @@ MS5837 brSensor;  // pressure sensor
 Motors motors;  // motors manager
 
 using namespace Commands;
+
+long now;
 
 void setup() {
    // analogReference(INTERNAL);
@@ -65,10 +64,7 @@ void setup() {
     SPI.attachInterrupt();                // enable SPI
     sei();
 
-    timer.setTimeout(IMU_dT*1000);
-    timer.restart();
-
-    Serial.println("Ciao...");
+    now = micros();
 }
 
 void sensorsRead(){
@@ -112,9 +108,8 @@ void loop() {
   // prepare data to send back via spi
  // unsigned long now = micros();
 
-  if(timer.isExpired()){
-    timer.restart();
-    
+  if(micros()-now > (long)IMU_dT*1000000){    
+    now = micros();
     sensorsRead();
   
     sensorsPrepare();
@@ -142,8 +137,6 @@ ISR (SPI_STC_vect)
     // if I sent the last sensor, reset current sensor to first one.
     if (++s > sensor_t::Last)
       s = sensor_t::First;
-    
-    process = true;
     
     if(c == 0x00){
       //the next incoming data is a button
