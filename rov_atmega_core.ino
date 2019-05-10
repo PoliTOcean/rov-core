@@ -171,15 +171,15 @@ ISR (SPI_STC_vect)
       SPDR = 0xFF;
       initial_ack = false;
       s = sensor_t::First;
-      reti();
     }
-    else
+    else{
       // Prepare the next sensor's value to send through SPI
       SPDR = sensors[static_cast<int>(s)].getValue()-1;
     
-    // if I sent the last sensor, reset current sensor to first one.
-    if (++s > sensor_t::Last){
-      initial_ack = true;
+      // if I sent the last sensor, reset current sensor to first one.
+      if (++s > sensor_t::Last){
+        initial_ack = true;
+      }
     }
 
     if(c==0x00 || c==0xFF) reti();
