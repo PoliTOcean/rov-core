@@ -160,7 +160,7 @@ ISR (SPI_STC_vect)
     if(c == 0x00){
       //the next incoming data is a button
       nextIsButton=true;
-      return;
+      reti();
     }
     
 
