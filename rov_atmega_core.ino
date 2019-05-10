@@ -17,6 +17,10 @@ volatile byte c;
 volatile bool nextIsButton = false;
 volatile int receivedDataSelector = 0;
 
+volatile float currentPressure;
+
+float temperature;
+
 IMU imu;  // imu sensor
 
 MS5837 brSensor;  // pressure sensor
@@ -45,7 +49,7 @@ void setup() {
     delay(1000);
 
     /** MOTORS INIT **/
-    motors.configure(&brSensor, imu);       // initialize motors
+    motors.configure(imu);                // initialize motors
     
     delay(3000);                          // delay of 1 second to make actions complete
 
@@ -59,13 +63,14 @@ void setup() {
 }
 
 void sensorsRead(){
+  temperature = analogRead(A1)/2.046;
   brSensor.read();
+  currentPressure = brSensor.pressure();
   imu.imuRead();
   imu.complementaryFilter();
 }
 
 void sensorsPrepare(){
-  float temperature = analogRead(A1)/2.046;
 
 /*
   Serial.print("Temperature: ");
@@ -89,7 +94,7 @@ void sensorsPrepare(){
   Serial.println(")");*/
   
   sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(static_cast<byte>(temperature));
-  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(static_cast<byte>(brSensor.pressure()/10));
+  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(static_cast<byte>(currentPressure-980));
   sensors[static_cast<int>(sensor_t::PITCH)].setValue(static_cast<byte>(imu.pitch));
   sensors[static_cast<int>(sensor_t::ROLL)].setValue(static_cast<byte>(imu.roll));
 }
@@ -106,7 +111,7 @@ void loop() {
     motors.evaluateHorizontal();
     updatedAxis=false;
   }
-  motors.evaluateVertical(brSensor.pressure());
+  motors.evaluateVertical(currentPressure);
 
  
   //Serial.println((float)analogRead(A0) / (float)2.046);
@@ -143,7 +148,7 @@ ISR (SPI_STC_vect)
           if (motors_->started)
             motors_->stop();
           else
-            motors_->start();
+            motors_->start(currentPressure);
         break;
         case Actions::VDOWN_ON:
           motors_->goDown();
