@@ -17,6 +17,8 @@ volatile byte c;
 volatile bool nextIsButton = false;
 volatile int receivedDataSelector = 0;
 
+volatile bool process = false;
+
 volatile float currentPressure;
 
 float temperature;
@@ -112,6 +114,21 @@ void loop() {
     updatedAxis=false;
   }
   motors.evaluateVertical(currentPressure);
+   
+  if (process)
+  {
+     Serial.print("Next sensor: ");
+     switch (s)
+     {
+        case sensor_t::ROLL: Serial.print("ROLL "); break;
+        case sensor_t::PITCH: Serial.print("PITCH "); break;
+        case sensor_t::TEMPERATURE: Serial.print("TEMEPRATURE "); break;
+        case sensor_t::PRESSURE: Serial.print("PRESSURE "); break;
+        default: break;
+     }
+     Serial.println(sensors[static_cast<int>(s)].getValue());
+  }
+  process = false;
 
  
   //Serial.println((float)analogRead(A0) / (float)2.046);
@@ -198,4 +215,6 @@ ISR (SPI_STC_vect)
 
       updatedAxis = true;
     }
+   
+    process = true;
 }
