@@ -11,7 +11,6 @@
 
 RBD::Timer timer;         //needed for the IMU reading process: it tells us when a certain timeout is expired 
 
-volatile sensor_t s;  // sensor counter
 volatile Array<Sensor<volatile byte>, SENSORS_SIZE> sensors; // array of sensors
 
 
@@ -19,10 +18,6 @@ volatile Array<volatile sensor_t, 130> queue;
 
 volatile bool updatedAxis = false;
 volatile byte c;
-volatile bool nextIsButton = false;
-volatile int receivedDataSelector = 0;
-
-volatile bool initial_ack = false;
 
 volatile float currentPressure;
 
@@ -45,7 +40,7 @@ void setup() {
     /** SENSORS CONFIGURATION **/
     for (auto sensor_type : sensor_t()) // create sensors array
         sensors.push_back(Sensor<volatile byte>(sensor_type, 0));
-    s = sensor_t::First;              // set the sensor counter
+//    s = sensor_t::First;              // set the sensor counter
 
     imu.configure();                      // initialize IMU sensor
 
@@ -128,15 +123,15 @@ void loop() {
   }
   motors.evaluateVertical(currentPressure);
   
-  if (process && queue.size()>100)
+/*  if (process && queue.size()>100)
   {
     /** SENSORS CONFIGURATION **/
-    for (int i=0; i<queue.size(); i++) // create sensors array
+  /*  for (int i=0; i<queue.size(); i++) // create sensors array
         Serial.print(static_cast<int>(queue[i])), Serial.print("\n");
     Serial.println("");
     s = sensor_t::First;
      process = false;
-  }
+  }*/
  
   //Serial.println((float)analogRead(A0) / (float)2.046);
  // now = micros()-now;
@@ -146,6 +141,15 @@ void loop() {
 ISR (SPI_STC_vect)
 {
     static Motors* motors_ = &motors;
+    
+    static bool nextIsButton = false;
+    static int receivedDataSelector = 0;
+    static bool nextIsAxes = false;
+    
+    static bool initial_ack = false;
+
+    static sensor_t s = sensor_t::First;
+
     
     c = SPDR;
 
@@ -169,6 +173,11 @@ ISR (SPI_STC_vect)
     if(c == 0x00){
       //the next incoming data is a button
       nextIsButton=true;
+      reti();
+    }
+    else if (c==0xFF) {
+      nextIsAxes = true;
+      receivedDataSelector = 0;
       reti();
     }
     
@@ -212,7 +221,7 @@ ISR (SPI_STC_vect)
        }
       nextIsButton = false; // last command
       receivedDataSelector = 0; // restart from x
-    }else{
+    }else if(nextIsAxes) {
       switch(receivedDataSelector++){
        case 0:         //  read x
         motors_->setX(c);
@@ -227,9 +236,10 @@ ISR (SPI_STC_vect)
        break;
       }
       
-      if (receivedDataSelector >= 3)
+      if (receivedDataSelector >= 3){
         receivedDataSelector = 0;
-
+        nextIsAxes = false;
+      }
       updatedAxis = true;
     }
 }
