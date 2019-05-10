@@ -110,19 +110,19 @@ void loop() {
   // prepare data to send back via spi
  // unsigned long now = micros();
 
-  if(!timer.isExpired()) return;
-  timer.restart();
+  if(timer.isExpired()){
+    timer.restart();
+    
+    sensorsRead();
   
-  sensorsRead();
-
-  sensorsPrepare();
-  
-  if(updatedAxis){
-    motors.evaluateHorizontal();
-    updatedAxis=false;
+    sensorsPrepare();
+    
+    if(updatedAxis){
+      motors.evaluateHorizontal();
+      updatedAxis=false;
+    }
+    motors.evaluateVertical(currentPressure);
   }
-  motors.evaluateVertical(currentPressure);
- 
   //Serial.println((float)analogRead(A0) / (float)2.046);
  // now = micros()-now;
  // Serial.println((float)now/1000);
