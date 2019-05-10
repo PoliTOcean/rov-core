@@ -108,8 +108,8 @@ void loop() {
   // prepare data to send back via spi
  // unsigned long now = micros();
 
-//  if(micros()-now > (long)IMU_dT*1000000){    
- //   now = micros();
+  if( (micros()-now)/1000 > (long)IMU_dT*1000){    
+    now = micros();
     sensorsRead();
   
     sensorsPrepare();
@@ -119,7 +119,7 @@ void loop() {
       updatedAxis=false;
     }
     motors.evaluateVertical(currentPressure);
-  //}
+  }
   //Serial.println((float)analogRead(A0) / (float)2.046);
  // now = micros()-now;
  // Serial.println((float)now/1000);
