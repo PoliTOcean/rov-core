@@ -38,7 +38,7 @@ void setup() {
 
     delay(1000);
     
-    brSensor.setModel(MS5837::MS5837_30BA);
+    brSensor.setModel(MS5837::MS5837_02BA);
     brSensor.setFluidDensity(997);        // kg/m^3 (freshwater, 1029 for seawater)
     brSensor.init();                      // initialize pressure sensor
 
