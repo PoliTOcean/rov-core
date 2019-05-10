@@ -17,6 +17,8 @@ volatile byte c;
 volatile bool nextIsButton = false;
 volatile int receivedDataSelector = 0;
 
+volatile bool process = false;
+
 volatile float currentPressure;
 
 float temperature;
@@ -112,6 +114,21 @@ void loop() {
     updatedAxis=false;
   }
   motors.evaluateVertical(currentPressure);
+   
+  if (process)
+  {
+     Serial.print("Next sensor: ");
+     switch (s)
+     {
+        case sensor_t::ROLL: Serial.print("ROLL "); break;
+        case sensor_t::PITCH: Serial.print("PITCH "); break;
+        case sensor_t::TEMPERATURE: Serial.print("TEMEPRATURE "); break;
+        case sensor_t::PRESSURE: Serial.print("PRESSURE "); break;
+        default: break;
+     }
+     Serial.println(sensors[static_cast<int>(s)].getValue());
+  }
+  process = false;
 
  
   //Serial.println((float)analogRead(A0) / (float)2.046);
@@ -126,10 +143,10 @@ ISR (SPI_STC_vect)
     c = SPDR;
     
     // Prepare the next sensor's value to send through SPI
-    SPDR = sensors[static_cast<int>(s++)].getValue();
+    SPDR = sensors[static_cast<int>(s)].getValue();
     
     // if I sent the last sensor, reset current sensor to first one.
-    if (s >= sensor_t::Last)
+    if (++s > sensor_t::Last)
       s = sensor_t::First;
     
     if(c == 0x00){
@@ -179,7 +196,7 @@ ISR (SPI_STC_vect)
       nextIsButton = false; // last command
       receivedDataSelector = 0; // restart from x
     }else{
-      switch(receivedDataSelector++){
+      switch(receivedDataSelector){
        case 0:         //  read x
         motors_->setX(c);
        break;
@@ -193,9 +210,11 @@ ISR (SPI_STC_vect)
        break;
       }
       
-      if (receivedDataSelector >= 3)
+      if (++receivedDataSelector > 2)
         receivedDataSelector = 0;
 
       updatedAxis = true;
     }
+   
+    process = true;
 }
