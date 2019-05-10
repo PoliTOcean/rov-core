@@ -15,11 +15,10 @@
 #define BL_pin  2
 
 #define kAng  15
-#define V_MUL 120
-#define kDep  600
+#define kDep  40
 
 
-void Motors::configure(MS5837 *psensor, IMU imu){
+void Motors::configure(IMU imu){
     // attach motors
     UR.attach(UR_pin);
     UL.attach(UL_pin);
@@ -29,9 +28,8 @@ void Motors::configure(MS5837 *psensor, IMU imu){
     BR.attach(BR_pin);
     BL.attach(BL_pin);
 
-    Motors::stop();  // do not run the motors untill `start()` is called
-    brSensor = psensor; // catch the pressure sensor object
-    imuSensor = imu; // catch the imu sensor object
+    Motors::stop();       // do not run the motors untill `start()` is called
+    imuSensor = imu;      // catch the imu sensor object
     savePressure = false;
     powerMode = MEDIUM;
 
@@ -72,7 +70,7 @@ void Motors::evaluateVertical(float current_pressure){
    int valUD=0, autoQuote=0;            //reset valUD
    if(down>0 || up>0){     //controlled up-down from joystick
      savePressure = true;                           //it has to save pressure when finished
-     valUD = (up-down)*V_MUL; //fixed value depending on buttons pressed
+     valUD = (up-down)*AXES_MAX; //fixed value depending on buttons pressed
    }else if(savePressure){
      requested_pressure = current_pressure;
      savePressure = false;
@@ -80,12 +78,6 @@ void Motors::evaluateVertical(float current_pressure){
    
    if(!savePressure) //change value for autoquote
      autoQuote = -(requested_pressure-current_pressure)*kDep;
-
-    Serial.print(requested_pressure);
-    Serial.print("\t");
-    Serial.print(current_pressure);
-    Serial.print("\t");
-    Serial.println(autoQuote);
   
    //adding values for UD movement/autoquote
    UL.set_value(valUD + ( autoQuote - pitchPower - rollPower) / mulPower[powerMode] );
@@ -94,7 +86,6 @@ void Motors::evaluateVertical(float current_pressure){
 }
 
 /* function to evaluate powers for horizontal movement.*/
-// TODO we have to pass from the SPI x y and rz and set the motors values
 void Motors::evaluateHorizontal() {
   if(!started){
     FL.set_value(0);
@@ -110,19 +101,13 @@ void Motors::evaluateHorizontal() {
   BR.set_value(signBR * (-y+x-rz));
 }
 
-void Motors::start(){
-  
-  /* DEBUG */
-  Serial.println("Starting...");
-  
+void Motors::start(float current_pressure){  
   started = true;
+
+  requested_pressure = current_pressure;
 }
 
-void Motors::stop(){
-  
-  /* DEBUG */
-  Serial.println("Stopping...");
-  
+void Motors::stop(){  
   x = 0;
   y = 0;
   rz = 0;

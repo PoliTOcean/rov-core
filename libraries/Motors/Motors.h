@@ -26,9 +26,9 @@ class Motors {
     volatile int down;
     volatile Motors::power powerMode;
         
-    void configure(MS5837 *psensor, IMU imu);
+    void configure(IMU imu);
 
-    void start();
+    void start(float current_pressure);
     void stop();
 
     void setX(byte x);
@@ -64,9 +64,8 @@ class Motors {
 
     volatile int x,y,rz;
     
-    MS5837 *brSensor;
     bool savePressure;
-    float requested_pressure;
+    volatile float requested_pressure;
 
     bool configured = false;
 
