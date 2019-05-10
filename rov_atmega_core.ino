@@ -101,7 +101,8 @@ void loop() {
   sensorsRead();
 
   sensorsPrepare();
-  
+
+  motors.setCurrentPressure(brSensor.pressure());
   if(updatedAxis){
     motors.evaluateHorizontal();
     updatedAxis=false;

@@ -6,20 +6,20 @@
 #define AXES_MAX    127
 #define AXES_MIN    -126
 
-#define UR_pin  7
-#define UL_pin  2
-#define UB_pin  8
-#define FR_pin  6
-#define FL_pin  3
-#define BR_pin  4
-#define BL_pin  5
+#define UR_pin  8
+#define UL_pin  7
+#define UB_pin  4
+#define FR_pin  5
+#define FL_pin  6
+#define BR_pin  3
+#define BL_pin  2
 
 #define kAng  15
-#define V_MUL 80
-#define kDep  20
+#define V_MUL 120
+#define kDep  600
 
 
-void Motors::configure(MS5837 psensor, IMU imu){
+void Motors::configure(MS5837 *psensor, IMU imu){
     // attach motors
     UR.attach(UR_pin);
     UL.attach(UL_pin);
@@ -29,20 +29,11 @@ void Motors::configure(MS5837 psensor, IMU imu){
     BR.attach(BR_pin);
     BL.attach(BL_pin);
 
-    UR.init(AXES_MIN, AXES_MAX);
-    UL.init(AXES_MIN, AXES_MAX);
-    UB.init(AXES_MIN, AXES_MAX);
-    FR.init(AXES_MIN, AXES_MAX);
-    FL.init(AXES_MIN, AXES_MAX);
-    BR.init(AXES_MIN, AXES_MAX);
-    BL.init(AXES_MIN, AXES_MAX);
-
     Motors::stop();  // do not run the motors untill `start()` is called
     brSensor = psensor; // catch the pressure sensor object
     imuSensor = imu; // catch the imu sensor object
     savePressure = false;
-    reqPress = brSensor.pressure();
-    powerMode = 1;
+    powerMode = MEDIUM;
 
     configured = true;
 }
@@ -70,29 +61,36 @@ void Motors::evaluateVertical(){
      UR.set_value(0);
      UL.set_value(0);
      UB.set_value(0);
+     return;
    }
 
    //call above functions for calculations
-   pitchPower = calcPitchPower()  / powerMode;
-   rollPower  = calcRollPower()   / powerMode;
+   pitchPower = calcPitchPower();
+   rollPower  = calcRollPower();
    
    //value for up-down movement
-   int valUD=0;            //reset valUD
+   int valUD=0, autoQuote=0;            //reset valUD
    if(down>0 || up>0){     //controlled up-down from joystick
      savePressure = true;                           //it has to save pressure when finished
      valUD = (up-down)*V_MUL; //fixed value depending on buttons pressed
    }else if(savePressure){
-     reqPress = brSensor.pressure();
+     requested_pressure = current_pressure;
      savePressure = false;
    } //else, if it is not (still) pressing up/down buttons
    
    if(!savePressure) //change value for autoquote
-     valUD = (reqPress-brSensor.pressure())*kDep / powerMode;
- 
+     autoQuote = -(requested_pressure-current_pressure)*kDep;
+
+    Serial.print(requested_pressure);
+    Serial.print("\t");
+    Serial.print(current_pressure);
+    Serial.print("\t");
+    Serial.println(autoQuote);
+  
    //adding values for UD movement/autoquote
-   UL.set_value(valUD - pitchPower - rollPower);
-   UR.set_value(valUD - pitchPower + rollPower);
-   UB.set_value(valUD + 2*pitchPower);
+   UL.set_value(valUD + ( autoQuote - pitchPower - rollPower) / mulPower[powerMode] );
+   UR.set_value(valUD + ( autoQuote - pitchPower + rollPower) / mulPower[powerMode] );
+   UB.set_value(valUD + ( autoQuote + 2*pitchPower) / mulPower[powerMode] );
 }
 
 /* function to evaluate powers for horizontal movement.*/
@@ -110,6 +108,10 @@ void Motors::evaluateHorizontal() {
   FR.set_value(signFR * (-y-x-rz));
   BL.set_value(signBL * (-y-x+rz));
   BR.set_value(signBR * (-y+x-rz));
+}
+
+void Motors::setCurrentPressure(float currPress){
+  current_pressure = currPress;
 }
 
 void Motors::start(){
@@ -156,35 +158,31 @@ void Motors::goDown(){
 }
 
 void Motors::setX(byte x){
-  this->x = map(x, IN_AXES_MIN, IN_AXES_MAX, AXES_MIN, AXES_MAX);
+  this->x = x-127;
 }
 
 void Motors::setY(byte y){
-  this->y = map(y, IN_AXES_MIN, IN_AXES_MAX, AXES_MIN, AXES_MAX);
+  this->y = y-127;
 }
 
 void Motors::setRz(byte rz){
-  this->rz = map(rz, IN_AXES_MIN, IN_AXES_MAX, AXES_MIN, AXES_MAX);
+  this->rz = rz-127;
 }
 
-void Motors::setPower(int powerMode){
+void Motors::setPower(power pwr){
   if(!configured) return;
 
-  float mul = 1.0;
-  switch(powerMode){
-    case 1: mul = 1.0; break;
-    case 2: mul = 2.0; break;
-    case 3: mul = 2.5; break;
-    default: powerMode = 1;
-  }
+  float mul = mulPower[static_cast<int>(pwr)];
 
-  UR.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
-  UL.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
-  UB.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
-  FR.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
-  FL.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
-  BR.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
-  BL.init(AXES_MIN, AXES_MAX, (int)(mul*DEFAULT_POWER));
+  FR.setPower((int)(mul*DEFAULT_POWER));
+  FL.setPower((int)(mul*DEFAULT_POWER));
+  BR.setPower((int)(mul*DEFAULT_POWER));
+  BL.setPower((int)(mul*DEFAULT_POWER));
 
-  this->powerMode = powerMode;
+  if(pwr == SLOW) mul = ( mulPower[static_cast<int>(MEDIUM)]+mulPower[static_cast<int>(SLOW)] ) / 2;
+  UR.setPower((int)(mul*DEFAULT_POWER));
+  UL.setPower((int)(mul*DEFAULT_POWER));
+  UB.setPower((int)(mul*DEFAULT_POWER));
+
+  this->powerMode = pwr;
 }

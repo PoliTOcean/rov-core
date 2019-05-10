@@ -11,14 +11,22 @@
 #include "PressureSensor.h"
 #include "IMU.h"
 
+#define SLOW_POWER    0.5
+#define MEDIUM_POWER  1.3
+#define FAST_POWER    3.3
+
 class Motors {
   public:
+    enum power {
+      SLOW, MEDIUM, FAST
+    };
+
     volatile bool started;
     volatile float up;
     volatile int down;
-    volatile int powerMode;
+    volatile Motors::power powerMode;
         
-    void configure(MS5837 psensor, IMU imu);
+    void configure(MS5837 *psensor, IMU imu);
 
     void start();
     void stop();
@@ -34,27 +42,34 @@ class Motors {
     void goUpFast();
     void stopUpFast();
 
-    void setPower(int power);
+    void setPower(Motors::power pwr);
     
     void evaluateVertical();
     void evaluateHorizontal();
+
+    void setCurrentPressure(float currPress);
     
   protected:
     const int signFL = -1;
-    const int signFR = 1;
-    const int signBL = -1;
+    const int signFR = -1;
+    const int signBL = 1;
     const int signBR = 1;
     const int signUR = 1;
     const int signUL = 1;
     const int signUB = 1;
 
+    const float mulPower[3] = {
+      SLOW_POWER, MEDIUM_POWER, FAST_POWER
+    };
+
     Motor FL, FR, BL, BR, UR, UL, UB;
 
-    volatile byte x,y,rz;
+    volatile int x,y,rz;
     
-    MS5837 brSensor;
+    MS5837 *brSensor;
     bool savePressure;
-    float reqPress;
+    float requested_pressure;
+    float current_pressure;
 
     bool configured = false;
 
@@ -62,5 +77,6 @@ class Motors {
     float calcPitchPower();
     float calcRollPower();
 };
+
 
 #endif
