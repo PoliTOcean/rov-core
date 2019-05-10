@@ -11,13 +11,13 @@
 
 RBD::Timer timer;         //needed for the IMU reading process: it tells us when a certain timeout is expired 
 
-volatile Array<Sensor<volatile byte>, SENSORS_SIZE> sensors; // array of sensors
-
-
-volatile Array<volatile sensor_t, 130> queue;
+volatile sensor_t s;  // sensor counter
+volatile Array<Sensor<byte>, SENSORS_SIZE> sensors; // array of sensors
 
 volatile bool updatedAxis = false;
 volatile byte c;
+volatile bool nextIsButton = false;
+volatile int receivedDataSelector = 0;
 
 volatile float currentPressure;
 
@@ -39,8 +39,8 @@ void setup() {
 
     /** SENSORS CONFIGURATION **/
     for (auto sensor_type : sensor_t()) // create sensors array
-        sensors.push_back(Sensor<volatile byte>(sensor_type, 0));
-//    s = sensor_t::First;              // set the sensor counter
+        sensors.push_back(Sensor<byte>(sensor_type, 0));
+    s = sensor_t::First;              // set the sensor counter
 
     imu.configure();                      // initialize IMU sensor
 
@@ -100,10 +100,10 @@ void sensorsPrepare(){
   Serial.print((int)static_cast<byte>((int)imu.roll));
   Serial.println(")");*/
   
-  sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(static_cast<volatile byte>(temperature));
-  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(static_cast<volatile byte>(currentPressure-980));
-  sensors[static_cast<int>(sensor_t::PITCH)].setValue(static_cast<volatile byte>(imu.pitch));
-  sensors[static_cast<int>(sensor_t::ROLL)].setValue(static_cast<volatile byte>(imu.roll));
+  sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(static_cast<byte>(temperature));
+  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(static_cast<byte>(currentPressure-980));
+  sensors[static_cast<int>(sensor_t::PITCH)].setValue(static_cast<byte>(imu.pitch));
+  sensors[static_cast<int>(sensor_t::ROLL)].setValue(static_cast<byte>(imu.roll));
 }
 
 void loop() {
@@ -122,16 +122,6 @@ void loop() {
     updatedAxis=false;
   }
   motors.evaluateVertical(currentPressure);
-  
-/*  if (process && queue.size()>100)
-  {
-    /** SENSORS CONFIGURATION **/
-  /*  for (int i=0; i<queue.size(); i++) // create sensors array
-        Serial.print(static_cast<int>(queue[i])), Serial.print("\n");
-    Serial.println("");
-    s = sensor_t::First;
-     process = false;
-  }*/
  
   //Serial.println((float)analogRead(A0) / (float)2.046);
  // now = micros()-now;
@@ -142,47 +132,22 @@ ISR (SPI_STC_vect)
 {
     static Motors* motors_ = &motors;
     
-    static bool nextIsButton = false;
-    static int receivedDataSelector = 0;
-    static bool nextIsAxes = false;
-    
-    static bool initial_ack = false;
-
-    static sensor_t s = sensor_t::First;
-
-    
     c = SPDR;
-
-   
-        
+    
+    // Prepare the next sensor's value to send through SPI
+    SPDR = sensors[static_cast<int>(s)].getValue();
+    
+    // if I sent the last sensor, reset current sensor to first one.
+    if (++s > sensor_t::Last)
+      s = sensor_t::First;
+    
     process = true;
     
     if(c == 0x00){
       //the next incoming data is a button
       nextIsButton=true;
+      reti();
     }
-    else if (c==0xFF) {
-      nextIsAxes = true;
-      receivedDataSelector = 0;
-    }
-
-    if (initial_ack)
-    {
-      SPDR = 0xFF;
-      initial_ack = false;
-      s = sensor_t::First;
-    }
-    else{
-      // Prepare the next sensor's value to send through SPI
-      SPDR = sensors[static_cast<int>(s)].getValue()-1;
-    
-      // if I sent the last sensor, reset current sensor to first one.
-      if (++s > sensor_t::Last){
-        initial_ack = true;
-      }
-    }
-
-    if(c==0x00 || c==0xFF) reti();
     
 
     if(nextIsButton){      
@@ -224,7 +189,7 @@ ISR (SPI_STC_vect)
        }
       nextIsButton = false; // last command
       receivedDataSelector = 0; // restart from x
-    }else if(nextIsAxes) {
+    }else{
       switch(receivedDataSelector++){
        case 0:         //  read x
         motors_->setX(c);
@@ -239,10 +204,9 @@ ISR (SPI_STC_vect)
        break;
       }
       
-      if (receivedDataSelector >= 3){
+      if (receivedDataSelector >= 3)
         receivedDataSelector = 0;
-        nextIsAxes = false;
-      }
+
       updatedAxis = true;
     }
 }
