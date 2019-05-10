@@ -21,6 +21,8 @@ volatile int receivedDataSelector = 0;
 
 volatile float currentPressure;
 
+volatile bool process = false;
+
 float temperature;
 
 IMU imu;  // imu sensor
@@ -120,7 +122,20 @@ void loop() {
     updatedAxis=false;
   }
   motors.evaluateVertical(currentPressure);
-
+  
+  if (process)
+  {
+     Serial.print("Next sensor:\t");
+     switch (s)
+     {
+        case sensor_t::ROLL: Serial.print("ROLL\t"); break;
+        case sensor_t::PITCH: Serial.print("PITCH\t"); break;
+        case sensor_t::TEMPERATURE: Serial.print("TEMEPRATURE\t"); break;
+        case sensor_t::PRESSURE: Serial.print("PRESSURE\t"); break;
+        default: break;
+     }
+     Serial.println(sensors[static_cast<int>(s)].getValue());
+  }
  
   //Serial.println((float)analogRead(A0) / (float)2.046);
  // now = micros()-now;
@@ -139,6 +154,8 @@ ISR (SPI_STC_vect)
     // if I sent the last sensor, reset current sensor to first one.
     if (s >= sensor_t::Last)
       s = sensor_t::First;
+    
+    process = true;
     
     if(c == 0x00){
       //the next incoming data is a button
