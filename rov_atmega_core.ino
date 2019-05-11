@@ -1,4 +1,3 @@
-#include <Array.h>
 #include <SPI.h>
 #include "IMU.h"
 #include "Sensor.h"
@@ -9,9 +8,11 @@
 
 #define SENSORS_SIZE static_cast<int>(sensor_t::Last)+1
 
-volatile Array<Sensor<byte>, SENSORS_SIZE> sensors; // array of sensors
+//volatile Array<Sensor<byte>, SENSORS_SIZE> sensors; // array of sensors
+volatile byte sensors[SENSORS_SIZE];
 
 volatile float currentPressure;
+
 volatile bool updatedAxis = false;
 
 float temperature;
@@ -31,10 +32,6 @@ void setup() {
    // analogReference(INTERNAL);
     
     Serial.begin(9600);                   // initialize comunication via the serial port
-
-    /** SENSORS CONFIGURATION **/
-    for (auto sensor_type : sensor_t()) // create sensors array
-        sensors.push_back(Sensor<byte>(sensor_type, 0));
 
     imu.configure();                      // initialize IMU sensor
 
@@ -75,7 +72,7 @@ void sensorsRead(){
 
 void sensorsPrepare(){
 
-/*
+/* DEBUG
   Serial.print("Temperature: ");
   Serial.print(temperature);
   Serial.print(" °C (");
@@ -96,10 +93,10 @@ void sensorsPrepare(){
   Serial.print((int)static_cast<byte>((int)imu.roll));
   Serial.println(")");*/
 
-  sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue( static_cast<byte>( temperature ) );
-  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue( static_cast<byte>( currentPressure - 980 ) );
-  sensors[static_cast<int>(sensor_t::PITCH)].setValue( static_cast<byte>(  ( imu.pitch + 3.15 )*10 ) );
-  sensors[static_cast<int>(sensor_t::ROLL)].setValue( static_cast<byte>(   ( imu.roll + 3.15 )*10 ) );
+  sensors[static_cast<int>(sensor_t::TEMPERATURE)]  = static_cast<byte>( temperature );
+  sensors[static_cast<int>(sensor_t::PRESSURE)]     = static_cast<byte>( currentPressure - 980 );
+  sensors[static_cast<int>(sensor_t::PITCH)]        = static_cast<byte>( ( imu.pitch + 3.15 )*10 );
+  sensors[static_cast<int>(sensor_t::ROLL)]         = static_cast<byte>( ( imu.roll + 3.15 )*10 );
 }
 
 void loop() {
@@ -126,41 +123,51 @@ ISR (SPI_STC_vect)
 {
     static Motors* motors_ = &motors;
     static byte c;
-    static bool nextIsButton = false, nextIsAxes = false, sensorsTerminator = false;
+    static bool nextIsCommand = false, nextIsAxes = false, sensorsTerminator = false;
     static int axis = 0;
     static sensor_t s = sensor_t::First;  // sensor counter
     
     c = SPDR;
 
     // check data to send
-    if(sensorsTerminator){
-      SPDR = 0xFF;
+    if (sensorsTerminator)
+    {
+      SPDR = Spi::SENSORS_DELIM;
       sensorsTerminator = false;
       s = sensor_t::First;
-    }else{
+    }
+    else
+    {
       // Prepare the next sensor's value to send through SPI
-      SPDR = sensors[(int)s].getValue();
+      SPDR = sensors[ static_cast<int>( s ) ];
+      
       // if I sent the last sensor, reset current sensor to first one.
-      if (++s > sensor_t::Last)
+      if (s == sensor_t::Last)
+      {
         sensorsTerminator = true;
+      }
+      else
+      {
+        ++s;
+      }
     }
 
     // check received data
-    if(c == 0x00){
+    if (c == Spi::COMMAND_DELIM)
+    {
       //the next incoming data is a button
-      nextIsButton=true;
+      nextIsCommand=true;
       return;
     }
-    else if (c == 0xFF)
+    else if (c == Spi::AXES_DELIM)
     {
       nextIsAxes = true;
-      s = sensor_t::First;
       return;
     }
     
 
-    if(nextIsButton){      
-      // process the nextIsButton
+    if(nextIsCommand){      
+      // process the nextIsCommand
       switch(c){
         case Actions::START_AND_STOP:
           if (motors_->started)
@@ -196,7 +203,7 @@ ISR (SPI_STC_vect)
           motors_->setPower(Motors::SLOW);
         break;
        }
-      nextIsButton = false; // last command
+      nextIsCommand = false; // last command
       axis = 0; // restart from x
     }
     else if (nextIsAxes)

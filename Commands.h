@@ -53,5 +53,13 @@ namespace Commands
     
     const unsigned char NONE               = 0x00;
   }
+
+  namespace Spi {
+    const unsigned char AXES_DELIM         = 0xFF;
+    const unsigned char COMMAND_DELIM      = 0x00;
+    const unsigned char SENSORS_DELIM      = 0xFF;
+  }
+
+  
 }
 #endif

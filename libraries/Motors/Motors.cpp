@@ -69,7 +69,7 @@ void Motors::evaluateVertical(float current_pressure){
    rollPower  = calcRollPower();
    
    //value for up-down movement
-   int valUD=0, autoQuote=0;            //reset valUD
+   int valUD=0, depthControl=0;            //reset valUD
    if(down>0 || up>0){     //controlled up-down from joystick
      savePressure = true;                           //it has to save pressure when finished
      valUD = (up-down)*AXES_MAX; //fixed value depending on buttons pressed
@@ -77,14 +77,13 @@ void Motors::evaluateVertical(float current_pressure){
      requested_pressure = current_pressure;
      savePressure = false;
    } //else, if it is not (still) pressing up/down buttons
-   
-   if(!savePressure) //change value for autoquote
-     autoQuote = -(requested_pressure-current_pressure)*kDep;
+   else //change value for autoquote
+     depthControl = -(requested_pressure-current_pressure)*kDep;
 
    //adding values for UD movement/autoquote
-   UL.set_value(valUD + ( autoQuote - pitchPower - rollPower) / mulPower[powerMode] );
-   UR.set_value(valUD + ( autoQuote - pitchPower + rollPower) / mulPower[powerMode] );
-   UB.set_value(valUD + ( autoQuote + 2*pitchPower) / mulPower[powerMode] );
+   UL.set_value(valUD + ( depthControl - pitchPower - rollPower) / mulPower[powerMode] );
+   UR.set_value(valUD + ( depthControl - pitchPower + rollPower) / mulPower[powerMode] );
+   UB.set_value(valUD + ( depthControl + 2*pitchPower) / mulPower[powerMode] );
 }
 
 /* function to evaluate powers for horizontal movement.*/
