@@ -8,11 +8,8 @@
 
 #define SENSORS_SIZE static_cast<int>(sensor_t::Last)+1
 
-//volatile Array<Sensor<byte>, SENSORS_SIZE> sensors; // array of sensors
 volatile byte sensors[SENSORS_SIZE];
-
 volatile float currentPressure;
-
 volatile bool updatedAxis = false;
 
 float temperature;
@@ -25,8 +22,6 @@ Motors motors;  // motors manager
 RBD::Timer timer;
 
 using namespace Commands;
-
-long now;
 
 void setup() {
    // analogReference(INTERNAL);
@@ -44,7 +39,7 @@ void setup() {
     delay(1000);
 
     /** MOTORS INIT **/
-    motors.configure(imu);                // initialize motors
+    motors.configure();                // initialize motors
     
     delay(3000);                          // delay of 1 second to make actions complete
 
@@ -58,8 +53,6 @@ void setup() {
 
     timer.setTimeout(IMU_dT*1000);
     timer.restart();
-
-    now = micros();
 }
 
 void sensorsRead(){
@@ -100,8 +93,6 @@ void sensorsPrepare(){
 }
 
 void loop() {
-  // prepare data to send back via spi
- // unsigned long now = micros();
 
   if( timer.onRestart() ){    
     sensorsRead();
@@ -112,11 +103,9 @@ void loop() {
       motors.evaluateHorizontal();
       updatedAxis=false;
     }
-    motors.evaluateVertical(currentPressure);
+    motors.evaluateVertical(currentPressure, imu.roll, imu.pitch);
   }
-  //Serial.println((float)analogRead(A0) / (float)2.046);
- // now = micros()-now;
- // Serial.println((float)now/1000);
+  
 }
 
 ISR (SPI_STC_vect)

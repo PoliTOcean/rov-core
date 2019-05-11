@@ -26,7 +26,7 @@ class Motors {
     volatile int down;
     volatile Motors::power powerMode;
         
-    void configure(IMU imu);
+    void configure();
 
     void start(float current_pressure);
     void stop();
@@ -44,7 +44,7 @@ class Motors {
 
     void setPower(Motors::power pwr);
     
-    void evaluateVertical(float current_pressure);
+    void evaluateVertical(float current_pressure, float roll, float pitch);
     void evaluateHorizontal();
     
   protected:
@@ -69,9 +69,8 @@ class Motors {
 
     bool configured = false;
 
-    IMU imuSensor;
-    float calcPitchPower();
-    float calcRollPower();
+    float calcPitchPower(float pitch);
+    float calcRollPower(float roll);
 };
 
 

@@ -20,7 +20,7 @@
 #define kDep  35
 
 
-void Motors::configure(IMU imu){
+void Motors::configure(){
     // attach motors
     UR.attach(UR_pin);
     UL.attach(UL_pin);
@@ -31,7 +31,6 @@ void Motors::configure(IMU imu){
     BL.attach(BL_pin);
 
     Motors::stop();       // do not run the motors untill `start()` is called
-    imuSensor = imu;      // catch the imu sensor object
     savePressure = false;
     powerMode = MEDIUM;
 
@@ -39,21 +38,21 @@ void Motors::configure(IMU imu){
 }
 
 //function for pitch power calculation
-float Motors::calcPitchPower(){
-  int power = kAng*imuSensor.pitch; //(the angle is the orizontal due to the sensor inclination)
+float Motors::calcPitchPower(float pitch){
+  int power = kAng*pitch; //(the angle is the orizontal due to the sensor inclination)
   if(power > MAX_IMU) power = MAX_IMU;
   return power;
 }
 
 //function for roll power calculation. Same as above, without sign inversion
-float Motors::calcRollPower(){
-  int power = kAng*imuSensor.roll; //(the angle is the orizontal due to the sensor inclination)
+float Motors::calcRollPower(float roll){
+  int power = kAng*roll; //(the angle is the orizontal due to the sensor inclination)
   if(power > MAX_IMU) power = MAX_IMU;
   return power;
 }
 
 //function to evaluate vertical motors values
-void Motors::evaluateVertical(float current_pressure){
+void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
    if(!configured) return;
 
    float pitchPower, rollPower;
@@ -65,8 +64,8 @@ void Motors::evaluateVertical(float current_pressure){
    }
 
    //call above functions for calculations
-   pitchPower = calcPitchPower();
-   rollPower  = calcRollPower();
+   pitchPower = calcPitchPower(pitch);
+   rollPower  = calcRollPower(roll);
    
    //value for up-down movement
    int valUD=0, depthControl=0;            //reset valUD
