@@ -16,7 +16,7 @@
 #define BR_pin  3
 #define BL_pin  2
 
-#define kAng  10
+#define kAng  0
 #define kDep  25
 
 
