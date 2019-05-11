@@ -139,7 +139,7 @@ ISR (SPI_STC_vect)
       s = sensor_t::First;
     }else{
       // Prepare the next sensor's value to send through SPI
-      SPDR = sensors[static_cast<int>(s)].getValue();
+      SPDR = sensors[(int)s].getValue();
       // if I sent the last sensor, reset current sensor to first one.
       if (++s > sensor_t::Last)
         sensorsTerminator = true;

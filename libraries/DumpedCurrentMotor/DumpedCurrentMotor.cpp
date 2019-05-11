@@ -41,7 +41,6 @@ void Motor::init(int maxi =  DEFAULT_MAX_VAL, int mini = DEFAULT_MIN_VAL,  int p
   OCR2A  = 255;                                  // COMPARE REGISTER A = (16*10^6) / (1*1024) - 1 (must be <256 -> 8 bit)-------> [16*10^6/(prescale*desired frequncy)] -1
   TCCR2B |= (1 << WGM22);                        // turn on CTC mode
   TCCR2B |= (1 << CS22) | (1 << CS20);           // Set CS12 and CS10 bits for 1024 prescaler
-  TIMSK2 &= (0 << OCIE2A);                       // enable timer compare interrupt
 
   //boundaries check
   if (maxi >= DEFAULT_MAX_VAL) maxi = DEFAULT_MAX_VAL;

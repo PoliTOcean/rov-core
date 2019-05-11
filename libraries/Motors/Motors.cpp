@@ -6,6 +6,8 @@
 #define AXES_MAX    127
 #define AXES_MIN    -126
 
+#define MAX_IMU     80
+
 #define UR_pin  8
 #define UL_pin  7
 #define UB_pin  4
@@ -14,8 +16,8 @@
 #define BR_pin  3
 #define BL_pin  2
 
-#define kAng  15
-#define kDep  40
+#define kAng  80
+#define kDep  35
 
 
 void Motors::configure(IMU imu){
@@ -38,16 +40,16 @@ void Motors::configure(IMU imu){
 
 //function for pitch power calculation
 float Motors::calcPitchPower(){
-  /* it takes the difference between current pitch and the requested one from the joystick
-   * and multiplicates it for a multiplication constant, passed as parameter */
-  return 0;//kAng*imuSensor.getPitch(); //(the angle is the orizontal due to the sensor inclination)
-  // TO DO controllare per MAX IMU
+  int power = kAng*imuSensor.pitch; //(the angle is the orizontal due to the sensor inclination)
+  if(power > MAX_IMU) power = MAX_IMU;
+  return power;
 }
 
 //function for roll power calculation. Same as above, without sign inversion
 float Motors::calcRollPower(){
-  return 0;//kAng*imuSensor.getRoll(); //(the angle is the orizontal due to the sensor inclination)
-  // TO DO controllare per MAX IMU
+  int power = kAng*imuSensor.roll; //(the angle is the orizontal due to the sensor inclination)
+  if(power > MAX_IMU) power = MAX_IMU;
+  return power;
 }
 
 //function to evaluate vertical motors values

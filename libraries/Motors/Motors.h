@@ -11,7 +11,7 @@
 #include "PressureSensor.h"
 #include "IMU.h"
 
-#define SLOW_POWER    0.5
+#define SLOW_POWER    0.7
 #define MEDIUM_POWER  1.3
 #define FAST_POWER    3.3
 

@@ -15,9 +15,6 @@ void IMU::complementaryFilter(){
     float cdr, cdp, cdy, cr, cp;
     float sdr, sdp, sdy, sr, sp;
     float accTot;
-
-    float dt = (float) (micros() - lastUpdate)/100; //todo check it!
-    lastUpdate = micros(); // update `lastUpdate` for the next iteration
     
     // add real dt with micros
     droll   = -Gx * IMU_dT;   // Angle around the X-axis (upside-down)
@@ -44,12 +41,17 @@ void IMU::complementaryFilter(){
     accTot = sqrt(pow(abs(Ax),2) + pow(abs(Ay),2) + pow(abs(Az),2));
     if (accTot > 0.9 && accTot < 1.1)
     {
-        rollAcc = atan2(Ay, -Az); //(upside-down, accData[2])
+        rollAcc = atan2(Ay, Az);
         pitchAcc = asin(-Ax/fabs(accTot));
 
-        roll = roll * 0.9 + rollAcc * 0.1;
+        roll = roll * 0.9 + rollAcc * 0.1 - 0.1;
         pitch = pitch * 0.9 + pitchAcc * 0.1;   
     }
+
+    float tmp;
+    tmp       = pitch;
+    pitch     = roll;
+    roll      = tmp;
 }
 
 
@@ -59,10 +61,6 @@ void IMU::imuRead(){
   Wire.write(0x3B);  // starting with register 0x3B (ACCEL_XOUT_H)
   Wire.endTransmission(false);
   Wire.requestFrom(MPU_ADDR, 14, true); // request a total of 14 registers
-
-  unsigned long now = micros();
-  dt += now - lastUpdate;       
-  lastUpdate = now;
   
   Ax = Wire.read() << 8 | Wire.read(); // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)
   Ay = Wire.read() << 8 | Wire.read(); // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)

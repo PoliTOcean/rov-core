@@ -29,8 +29,6 @@
 
 class IMU {
   public:
-    float getPitch();
-    float getRoll();
     void configure(); 
     void printValues();
     void imuRead();
