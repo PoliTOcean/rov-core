@@ -3,6 +3,9 @@
 #ifndef POLITOCEAN_LIMIT_CURRENT_H
 #define POLITOCEAN_LIMIT_CURRENT_H
 
+#define DEFAULT_POWER      120
+#define MAX_POWER          400
+
 //useful constants
 #define DEFAULT_PERC      10                                        // default percentage of the step
 #define DEFAULT_MAX_PERC  30                                        // default max for the percentage for the step          
@@ -19,7 +22,7 @@
  *  
  *  Wrapper class for the Servo motor, which provides the developer with a variable step, which is used to update
  *  the servo speed gradually using a timer.
- *  It's made to handle 7 motors (it can be edited to handle more.
+ *  It's made to handle 7 motors (it can be edited to handle more)
  */
 class Motor {
    private:
@@ -50,6 +53,7 @@ class Motor {
       void attach(int pin);
       void detach();
       bool update();
+      void setPower(int power);
       
    protected:
       void init(int, int, int);

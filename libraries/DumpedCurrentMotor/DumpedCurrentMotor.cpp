@@ -3,7 +3,7 @@
 #include "Arduino.h"
 
 #define MAX_VAL 127
-#define MIN_VAL -127
+#define MIN_VAL -126
 
 /*
  * in the vect vector are saved all the instances of the motor that will be create in the following way
@@ -31,7 +31,7 @@ list_Motor* list = NULL;
  *
  *  @return void
  */
-void Motor::init(int maxi =  DEFAULT_MAX_VAL, int mini = DEFAULT_MIN_VAL, int perc = DEFAULT_PERC)
+void Motor::init(int maxi =  DEFAULT_MAX_VAL, int mini = DEFAULT_MIN_VAL,  int perc = DEFAULT_PERC)
 {
   //Timer setup
   cli();
@@ -41,7 +41,6 @@ void Motor::init(int maxi =  DEFAULT_MAX_VAL, int mini = DEFAULT_MIN_VAL, int pe
   OCR2A  = 255;                                  // COMPARE REGISTER A = (16*10^6) / (1*1024) - 1 (must be <256 -> 8 bit)-------> [16*10^6/(prescale*desired frequncy)] -1
   TCCR2B |= (1 << WGM22);                        // turn on CTC mode
   TCCR2B |= (1 << CS22) | (1 << CS20);           // Set CS12 and CS10 bits for 1024 prescaler
-  TIMSK2 |= (0 << OCIE2A);                       // enable timer compare interrupt
 
   //boundaries check
   if (maxi >= DEFAULT_MAX_VAL) maxi = DEFAULT_MAX_VAL;
@@ -68,6 +67,14 @@ void Motor::init(int maxi =  DEFAULT_MAX_VAL, int mini = DEFAULT_MIN_VAL, int pe
   vect[i] = this;
   i++;
   sei();
+}
+
+void Motor::setPower(int power){
+  if(power < 0) power = 0;
+  else if(power > MAX_POWER) power = MAX_POWER;
+
+  this->minval = SERVO_STOP_VALUE - power;
+  this->maxval = SERVO_STOP_VALUE + power;
 }
 
 
@@ -144,10 +151,6 @@ void Motor::set_value(int val)                                      // set the n
   if (val > MAX_VAL) val = MAX_VAL;                         // saturation max value
   if (val < MIN_VAL) val = MIN_VAL;                         // stauration min value
   this->reach_value = map(val, MIN_VAL, MAX_VAL, this->minval, this->maxval);
-
-  /* DEBUG */
-  Serial.print("\tMotor reach value:\t");
-  Serial.println(this->reach_value);
   
   if (!this->update()){
     insert(this->code);

@@ -1,48 +1,45 @@
-
-#include <Array.h>
 #include <SPI.h>
 #include "IMU.h"
 #include "Sensor.h"
 #include "PressureSensor.h"
 #include "Motors.h"
 #include "Commands.h"
+#include "RBD_Timer.h"
 
 #define SENSORS_SIZE static_cast<int>(sensor_t::Last)+1
 
-volatile sensor_t s;  // sensor counter
-volatile Array<Sensor<byte>, SENSORS_SIZE> sensors; // array of sensors
-
+volatile byte sensors[SENSORS_SIZE];
+volatile float currentPressure;
 volatile bool updatedAxis = false;
-volatile byte c;
-volatile bool nextIsButton = false;
-volatile int receivedDataSelector = 0;
+
+float temperature;
 
 IMU imu;  // imu sensor
 
 MS5837 brSensor;  // pressure sensor
 Motors motors;  // motors manager
 
+RBD::Timer timer;
+
+using namespace Commands;
 
 void setup() {
+   // analogReference(INTERNAL);
+    
     Serial.begin(9600);                   // initialize comunication via the serial port
-
-    /** SENSORS CONFIGURATION **/
-    for (auto sensor_type : sensor_t()) // create sensors array
-        sensors.push_back(Sensor<byte>(sensor_type, 0));
-    s = sensor_t::First;              // set the sensor counter
 
     imu.configure();                      // initialize IMU sensor
 
     delay(1000);
     
-    brSensor.setModel(MS5837::MS5837_30BA);
+    brSensor.setModel(MS5837::MS5837_02BA);
     brSensor.setFluidDensity(997);        // kg/m^3 (freshwater, 1029 for seawater)
     brSensor.init();                      // initialize pressure sensor
 
     delay(1000);
 
     /** MOTORS INIT **/
-    motors.configure(brSensor,imu);       // initialize motors
+    motors.configure();                // initialize motors
     
     delay(3000);                          // delay of 1 second to make actions complete
 
@@ -53,114 +50,174 @@ void setup() {
     SPDR = 0xFF;                          // set the SPI data register to 0xFF before sending sensors data
     SPI.attachInterrupt();                // enable SPI
     sei();
+
+    timer.setTimeout(IMU_dT*1000);
+    timer.restart();
 }
 
 void sensorsRead(){
+  temperature = analogRead(A1)/2.046;
   brSensor.read();
+  currentPressure = brSensor.pressure();
   imu.imuRead();
   imu.complementaryFilter();
 }
 
 void sensorsPrepare(){
-  sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(brSensor.temperature());
-  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(brSensor.pressure());
-  sensors[static_cast<int>(sensor_t::PITCH)].setValue(imu.pitch);
-  sensors[static_cast<int>(sensor_t::ROLL)].setValue(imu.roll);
+
+/* DEBUG
+  Serial.print("Temperature: ");
+  Serial.print(temperature);
+  Serial.print(" °C (");
+  Serial.print((int)static_cast<byte>((int)temperature));
+  Serial.print(")\tPressure: ");
+  Serial.print(brSensor.pressure());
+  Serial.print(" mBar (");
+  Serial.print((int)static_cast<byte>((int)brSensor.pressure()/10));
+  Serial.print(")  ");
+  Serial.print(brSensor.depth());
+  Serial.print(" m\tPitch: ");
+  Serial.print(imu.pitch);
+  Serial.print(" ° (");
+  Serial.print((int)static_cast<byte>((int)imu.pitch));
+  Serial.print(")\tRoll: ");
+  Serial.print(imu.roll);
+  Serial.print(" ° (");
+  Serial.print((int)static_cast<byte>((int)imu.roll));
+  Serial.println(")");*/
+
+  sensors[static_cast<int>(sensor_t::TEMPERATURE_PWR)]  = static_cast<byte>( temperature );
+  sensors[static_cast<int>(sensor_t::PRESSURE)]         = static_cast<byte>( currentPressure - 980 );
+  sensors[static_cast<int>(sensor_t::PITCH)]            = static_cast<byte>( ( imu.pitch + 3.15 )*10 );
+  sensors[static_cast<int>(sensor_t::ROLL)]             = static_cast<byte>( ( imu.roll + 3.15 )*10 );
+  sensors[static_cast<int>(sensor_t::TEMPERATURE_INT)]  = static_cast<byte>( imu.temperature );
 }
 
 void loop() {
-  // prepare data to send back via spi
- // unsigned long now = micros();
 
-  sensorsRead();
-
-  sensorsPrepare();
+  if( timer.onRestart() ){    
+    sensorsRead();
   
-  if(updatedAxis){
-    motors.evaluateHorizontal();
-    updatedAxis=false;
+    sensorsPrepare();
+    
+    if(updatedAxis){
+      motors.evaluateHorizontal();
+      updatedAxis=false;
+    }
+
+    //IMU's pitch is ROV's roll and viceversa
+    motors.evaluateVertical(currentPressure, imu.pitch, imu.roll);
   }
-  motors.evaluateVertical();
   
- // now = micros()-now;
- // Serial.println((float)now/1000);
 }
 
 ISR (SPI_STC_vect)
 {
     static Motors* motors_ = &motors;
+    static byte c;
+    static bool nextIsCommand = false, nextIsAxes = false, sensorsTerminator = false;
+    static int axis = 0;
+    static sensor_t s = sensor_t::First;  // sensor counter
     
     c = SPDR;
 
-    // Prepare the next sensor's value to send through SPI
-    SPDR = sensors[static_cast<int>(s)].getValue();
-
-    // if I sent the last sensor, reset current sensor to first one.
-    if (++s > sensor_t::Last)
+    // check data to send
+    if (sensorsTerminator)
+    {
+      SPDR = Spi::SENSORS_DELIM;
+      sensorsTerminator = false;
       s = sensor_t::First;
+    }
+    else
+    {
+      // Prepare the next sensor's value to send through SPI
+      SPDR = sensors[ static_cast<int>( s ) ];
       
-    if(c == 0x00){
+      // if I sent the last sensor, reset current sensor to first one.
+      if (s == sensor_t::Last)
+      {
+        sensorsTerminator = true;
+      }
+      else
+      {
+        ++s;
+      }
+    }
+
+    // check received data
+    if (c == Spi::COMMAND_DELIM)
+    {
       //the next incoming data is a button
-      nextIsButton=true;
+      nextIsCommand=true;
+      return;
+    }
+    else if (c == Spi::AXES_DELIM)
+    {
+      nextIsAxes = true;
       return;
     }
     
 
-    if(nextIsButton){
-      
-      /* DEBUG */
-      Serial.print("\tButton received:\t");
-      Serial.println(c);
-      
-      // process the nextIsButton
+    if(nextIsCommand){      
+      // process the nextIsCommand
       switch(c){
-        case MOTORS_ON:
-          motors_->start();
+        case Actions::START_AND_STOP:
+          if (motors_->started)
+            motors_->stop();
+          else
+            motors_->start(currentPressure);
         break;
-        case MOTORS_OFF:
-          motors_->stop();
-        break;
-        case VDOWN:
+        case Actions::VDOWN_ON:
           motors_->goDown();
         break;
-        case VDOWN_STOP:
-          motors_->stopVertical();
+        case Actions::VDOWN_OFF:
+          motors_->stopDown();
         break;
-        case VUP:
+        case Actions::VUP_ON:
           motors_->goUp();
         break;
-        case VUP_STOP:
-          motors_->stopVertical();
+        case Actions::VUP_OFF:
+          motors_->stopUp();
         break;
-        case FAST:
-          motors_->velocity = 3;
+        case Actions::VUP_FAST_ON:
+          motors_->goUpFast();
         break;
-        case NORMAL:
-          motors_->velocity = 2;
+        case Actions::VUP_FAST_OFF:
+          motors_->stopUpFast();
         break;
-        case SLOW:
-          motors_->velocity = 1;
+        case Actions::FAST:
+          motors_->setPower(Motors::FAST);
+        break;
+        case Actions::MEDIUM:
+          motors_->setPower(Motors::MEDIUM);
+        break;
+        case Actions::SLOW:
+          motors_->setPower(Motors::SLOW);
         break;
        }
-      nextIsButton = false; // last command
-      receivedDataSelector = 0; // restart from x
-    }else{
-      switch(receivedDataSelector){
+      nextIsCommand = false; // last command
+      axis = 0; // restart from x
+    }
+    else if (nextIsAxes)
+    {
+      switch(axis){
        case 0:         //  read x
-        motors_->x = c-127;
+        motors_->setX(c);
        break;
       
        case 1:        // read y
-       motors_->y = c-127;
+       motors_->setY(c);
        break;
       
-       case 2:  //  read rz
-       motors_->rz = c-127;
+       case 2:        //  read rz
+       motors_->setRz(c);
        break;
       }
       
-      if (++receivedDataSelector >= 3)
-        receivedDataSelector = 0;
+      if (++axis > 2){
+        nextIsAxes = false;
+        axis = 0;
+      }
 
       updatedAxis = true;
     }
