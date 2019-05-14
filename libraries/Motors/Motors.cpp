@@ -1,84 +1,91 @@
 #include "Arduino.h"
 #include "Motors.h"
 
-#define UR_pin  4
-#define UL_pin  5
-#define UB_pin  6
-#define FR_pin  11
-#define FL_pin  12
-#define BR_pin  13
-#define BL_pin  14
+#define IN_AXES_MIN 1
+#define IN_AXES_MAX 254
+#define AXES_MAX    127
+#define AXES_MIN    -126
 
-#define kAng 0.5
-#define V_MUL 50
-#define kDep 0.5
+#define MAX_IMU     80
+
+#define UR_pin  8
+#define UL_pin  7
+#define UB_pin  4
+#define FR_pin  5
+#define FL_pin  6
+#define BR_pin  3
+#define BL_pin  2
+
+#define kAng  0
+#define kDep  25
 
 
-void Motors::configure(MS5837 psensor, IMU imu){
+void Motors::configure(){
     // attach motors
-    UR.attach(UR_pin);                              
-    UL.attach(UL_pin);                              
-    UB.attach(UB_pin);                              
-    FR.attach(FR_pin);                              
-    FL.attach(FL_pin);                             
-    BR.attach(BR_pin);                              
-    BL.attach(BL_pin);                              
-    Motors::stop();  // do not run the motors untill `start()` is called
-    brSensor = psensor; // catch the pressure sensor object
-    imuSensor = imu; // catch the imu sensor object
+    UR.attach(UR_pin);
+    UL.attach(UL_pin);
+    UB.attach(UB_pin);
+    FR.attach(FR_pin);
+    FL.attach(FL_pin);
+    BR.attach(BR_pin);
+    BL.attach(BL_pin);
+
+    Motors::stop();       // do not run the motors untill `start()` is called
     savePressure = false;
-    reqPress = brSensor.pressure();
+    powerMode = MEDIUM;
+
+    configured = true;
 }
 
 //function for pitch power calculation
-float Motors::calcPitchPower(){
-  /* it takes the difference between current pitch and the requested one from the joystick
-   * and multiplicates it for a multiplication constant, passed as parameter */
-  return 0;//kAng*imuSensor.getPitch(); //(the angle is the orizontal due to the sensor inclination)
-  // TO DO controllare per MAX IMU
+float Motors::calcPitchPower(float pitch){
+  int power = kAng*pitch; //(the angle is the orizontal due to the sensor inclination)
+  if(power > MAX_IMU) power = MAX_IMU;
+  return power;
 }
 
 //function for roll power calculation. Same as above, without sign inversion
-float Motors::calcRollPower(){
-  return 0;//kAng*imuSensor.getRoll(); //(the angle is the orizontal due to the sensor inclination)
-  // TO DO controllare per MAX IMU
+float Motors::calcRollPower(float roll){
+  int power = kAng*roll; //(the angle is the orizontal due to the sensor inclination)
+  if(power > MAX_IMU) power = MAX_IMU;
+  return power;
 }
 
 //function to evaluate vertical motors values
-void Motors::evaluateVertical(){
+void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
+   if(!configured) return;
 
    float pitchPower, rollPower;
    if(!started){
      UR.set_value(0);
      UL.set_value(0);
      UB.set_value(0);
+     return;
    }
 
    //call above functions for calculations
-   pitchPower = calcPitchPower();
-   rollPower = calcRollPower();
+   pitchPower = calcPitchPower(pitch);
+   rollPower  = calcRollPower(roll);
    
    //value for up-down movement
-   int valUD=0;            //reset valUD
-   if(down || up){         //controlled up-down from joystick
+   int valUD=0, depthControl=0;            //reset valUD
+   if(down>0 || up>0){     //controlled up-down from joystick
      savePressure = true;                           //it has to save pressure when finished
-     valUD = (up-down)*(V_MUL/* TO DO +fastV*FAST_V*/); //fixed value depending on buttons pressed
+     valUD = (up-down)*AXES_MAX; //fixed value depending on buttons pressed
    }else if(savePressure){
-     reqPress = brSensor.pressure();
+     requested_pressure = current_pressure;
      savePressure = false;
    } //else, if it is not (still) pressing up/down buttons
-   
-   if(!savePressure) //change value for autoquote
-     valUD = (reqPress-brSensor.pressure())*kDep;
- 
+   else //change value for autoquote
+     depthControl = -(requested_pressure-current_pressure)*kDep;
+
    //adding values for UD movement/autoquote
-   UL.set_value(valUD - pitchPower - rollPower);
-   UR.set_value(valUD - pitchPower + rollPower);
-   UB.set_value(valUD + 2*pitchPower);
+   UL.set_value(valUD + ( depthControl - pitchPower - rollPower) / mulPower[powerMode] );
+   UR.set_value(valUD + ( depthControl - pitchPower + rollPower) / mulPower[powerMode] );
+   UB.set_value(valUD + ( depthControl + 1.8*pitchPower) / mulPower[powerMode] );
 }
 
 /* function to evaluate powers for horizontal movement.*/
-// TODO we have to pass from the SPI x y and rz and set the motors values
 void Motors::evaluateHorizontal() {
   if(!started){
     FL.set_value(0);
@@ -94,27 +101,24 @@ void Motors::evaluateHorizontal() {
   BR.set_value(signBR * (-y+x-rz));
 }
 
-void Motors::start(){
-  
-  /* DEBUG */
-  Serial.println("Starting...");
-  
+void Motors::start(float current_pressure){  
   started = true;
+
+  requested_pressure = current_pressure;
 }
 
-void Motors::stop(){
-  
-  /* DEBUG */
-  Serial.println("Stopping...");
-  
+void Motors::stop(){  
   x = 0;
   y = 0;
   rz = 0;
   started = false;
 }
 
-void Motors::stopVertical(){
+void Motors::stopUp(){
   up = 0;
+}
+
+void Motors::stopDown(){
   down = 0;
 }
 
@@ -122,6 +126,44 @@ void Motors::goUp(){
   up = 1;
 }
 
+void Motors::goUpFast(){
+  up = 1.5;
+}
+
+void Motors::stopUpFast(){
+  up = 1;
+}
+
 void Motors::goDown(){
   down = 1;
+}
+
+void Motors::setX(byte x){
+  this->x = x-127;
+}
+
+void Motors::setY(byte y){
+  this->y = y-127;
+}
+
+void Motors::setRz(byte rz){
+  this->rz = rz-127;
+}
+
+void Motors::setPower(power pwr){
+  if(!configured) return;
+
+  float mul = mulPower[static_cast<int>(pwr)];
+
+  FR.setPower((int)(mul*DEFAULT_POWER));
+  FL.setPower((int)(mul*DEFAULT_POWER));
+  BR.setPower((int)(mul*DEFAULT_POWER));
+  BL.setPower((int)(mul*DEFAULT_POWER));
+
+  if(pwr == SLOW) mul = ( mulPower[static_cast<int>(MEDIUM)]+mulPower[static_cast<int>(SLOW)] ) / 2;
+  UR.setPower((int)(mul*DEFAULT_POWER));
+  UL.setPower((int)(mul*DEFAULT_POWER));
+  UB.setPower((int)(mul*DEFAULT_POWER));
+
+  this->powerMode = pwr;
 }
