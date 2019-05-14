@@ -86,10 +86,11 @@ void sensorsPrepare(){
   Serial.print((int)static_cast<byte>((int)imu.roll));
   Serial.println(")");*/
 
-  sensors[static_cast<int>(sensor_t::TEMPERATURE)]  = static_cast<byte>( temperature );
-  sensors[static_cast<int>(sensor_t::PRESSURE)]     = static_cast<byte>( currentPressure - 980 );
-  sensors[static_cast<int>(sensor_t::PITCH)]        = static_cast<byte>( ( imu.pitch + 3.15 )*10 );
-  sensors[static_cast<int>(sensor_t::ROLL)]         = static_cast<byte>( ( imu.roll + 3.15 )*10 );
+  sensors[static_cast<int>(sensor_t::TEMPERATURE_PWR)]  = static_cast<byte>( temperature );
+  sensors[static_cast<int>(sensor_t::PRESSURE)]         = static_cast<byte>( currentPressure - 980 );
+  sensors[static_cast<int>(sensor_t::PITCH)]            = static_cast<byte>( ( imu.pitch + 3.15 )*10 );
+  sensors[static_cast<int>(sensor_t::ROLL)]             = static_cast<byte>( ( imu.roll + 3.15 )*10 );
+  sensors[static_cast<int>(sensor_t::TEMPERATURE_INT)]  = static_cast<byte>( imu.temperature );
 }
 
 void loop() {

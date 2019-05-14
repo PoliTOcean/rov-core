@@ -35,9 +35,10 @@ class IMU {
     void complementaryFilter();
     float pitch;
     float roll;
+    float temperature;
     
   private:
-    float Ax,Ay,Az,Gx,Gy,Gz,Tmp;
+    float Ax,Ay,Az,Gx,Gy,Gz;
     float gyrData;
     int dt;
     unsigned long lastUpdate;

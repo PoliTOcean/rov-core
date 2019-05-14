@@ -57,16 +57,19 @@ void IMU::imuRead(){
   Wire.endTransmission(false);
   Wire.requestFrom(MPU_ADDR, 14, true); // request a total of 14 registers
   
+  // Accelerometer values
   Ax = Wire.read() << 8 | Wire.read(); // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)
   Ay = Wire.read() << 8 | Wire.read(); // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
   Az = Wire.read() << 8 | Wire.read(); // 0x3F (ACCEL_ZOUT_H) & 0x40 (ACCEL_ZOUT_L)
-  Tmp = Wire.read() << 8 | Wire.read(); // 0x41 (TEMP_OUT_H) & 0x42 (TEMP_OUT_L)
+  // Temperature
+  temperature   = Wire.read() << 8 | Wire.read(); // 0x41 (TEMP_OUT_H) & 0x42 (TEMP_OUT_L)
+  // Gyroscope values
   Gx = Wire.read() << 8 | Wire.read(); // 0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
   Gy = Wire.read() << 8 | Wire.read(); // 0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
   Gz = Wire.read() << 8 | Wire.read(); // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
 
   //scale temperature
-  Tmp = (Tmp/340.00+36.53);
+  temperature = (temperature/340.00+36.53);
 
   // Convert the data
   Ax = -(Ax - 337.9)   / 16726.05;
@@ -90,7 +93,7 @@ void IMU::printValues(){
   Serial.print("\tY= "); Serial.print(Ay);
   Serial.print("\tZ= "); Serial.println(Az);
   //equation for temperature in degrees C from datasheet
-  Serial.print("Temperature: "); Serial.print(Tmp); Serial.println(" °C ");
+  Serial.print("Temperature: "); Serial.print(temperature); Serial.println(" °C ");
 
   Serial.print("Gyr:\t");
   Serial.print("X= "); Serial.print(Gx);
@@ -98,34 +101,3 @@ void IMU::printValues(){
   Serial.print("\tZ= "); Serial.println(Gz);
   Serial.println("****");
 }
-
-/*byte IMU::getAx(){
-  updateValues();   
-  return ((Ax/256) & 0x00FF);
-}
-
-byte IMU::getAy(){
-  updateValues();
-  return ((Ay/256) & 0x00FF);
-}
-
-byte IMU::getAz(){
-  updateValues();
-  return ((Az/256) & 0x00FF);
-}
-
-
-byte IMU::getGx(){
-  updateValues();
-  return ((Gx/256) & 0x00FF);
-}
-
-byte IMU::getGy(){
-  updateValues();
-  return ((Gy/256) & 0x00FF);  
-}
-
-byte IMU::getGz(){
-  updateValues();
-  return ((Gz/256) & 0x00FF);  
-}*/
