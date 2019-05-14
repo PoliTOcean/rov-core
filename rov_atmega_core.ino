@@ -56,16 +56,11 @@ void setup() {
 }
 
 void sensorsRead(){
-  static int readingCounters = 0;
-  if(readingCounters > 30){
-    temperature = analogRead(A1)/2.046;
-    readingCounters = 0;
-  }
+  temperature = analogRead(A1)/2.046;
   brSensor.read();
   currentPressure = brSensor.pressure();
   imu.imuRead();
   imu.complementaryFilter();
-  readingCounters++;
 }
 
 void sensorsPrepare(){
@@ -108,7 +103,9 @@ void loop() {
       motors.evaluateHorizontal();
       updatedAxis=false;
     }
-    motors.evaluateVertical(currentPressure, imu.roll, imu.pitch);
+
+    //IMU's pitch is ROV's roll and viceversa
+    motors.evaluateVertical(currentPressure, imu.pitch, imu.roll);
   }
   
 }

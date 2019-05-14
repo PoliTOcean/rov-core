@@ -82,7 +82,7 @@ void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
    //adding values for UD movement/autoquote
    UL.set_value(valUD + ( depthControl - pitchPower - rollPower) / mulPower[powerMode] );
    UR.set_value(valUD + ( depthControl - pitchPower + rollPower) / mulPower[powerMode] );
-   UB.set_value(valUD + ( depthControl + 1.5*pitchPower) / mulPower[powerMode] );
+   UB.set_value(valUD + ( depthControl + 1.8*pitchPower) / mulPower[powerMode] );
 }
 
 /* function to evaluate powers for horizontal movement.*/
