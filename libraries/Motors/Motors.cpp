@@ -20,6 +20,7 @@
 #define KI  0
 #define KD  0
 #define kDep  25
+#define dt    0.03
 
 
 void Motors::configure(){
