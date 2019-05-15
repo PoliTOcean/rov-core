@@ -57,7 +57,6 @@ void setup() {
 
 void sensorsRead(){
   temperature = analogRead(A1)/2.046;
-  brSensor.read();
   currentPressure = brSensor.pressure();
   imu.imuRead();
   imu.complementaryFilter();
@@ -94,7 +93,9 @@ void sensorsPrepare(){
 }
 
 void loop() {
-
+  
+  brSensor.read();
+  
   if( timer.onRestart() ){    
     sensorsRead();
   
