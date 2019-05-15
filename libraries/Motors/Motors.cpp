@@ -16,7 +16,9 @@
 #define BR_pin  3
 #define BL_pin  2
 
-#define kAng  0
+#define KP  0
+#define KI  0
+#define KD  0
 #define kDep  25
 
 
@@ -30,6 +32,11 @@ void Motors::configure(){
     BR.attach(BR_pin);
     BL.attach(BL_pin);
 
+    integ_roll = 0;
+    integ_pitch = 0;
+    prevpitch = 0;
+    prevroll = 0;
+
     Motors::stop();       // do not run the motors untill `start()` is called
     savePressure = false;
     powerMode = MEDIUM;
@@ -39,15 +46,31 @@ void Motors::configure(){
 
 //function for pitch power calculation
 float Motors::calcPitchPower(float pitch){
-  int power = kAng*pitch; //(the angle is the orizontal due to the sensor inclination)
-  if(power > MAX_IMU) power = MAX_IMU;
+  int power_p_pitch, power_d_pitch, power_i_pitch, power; //(the angle is the orizontal due to the sensor inclination)
+  int der;
+  power_d_pitch = KP*pitch;
+  der           = (pitch-prevpitch)/dt;
+  power_d_pitch = KD*der;
+  integ_pitch   = integ_pitch + dt*pitch;
+  power_i_pitch = KI*integ_pitch;
+  power         = power_p_pitch+power_d_pitch+power_d_pitch;
+  if(power > MAX_IMU) power_p_pitch = MAX_IMU;
+  prevpitch     = pitch;
   return power;
 }
 
 //function for roll power calculation. Same as above, without sign inversion
 float Motors::calcRollPower(float roll){
-  int power = kAng*roll; //(the angle is the orizontal due to the sensor inclination)
-  if(power > MAX_IMU) power = MAX_IMU;
+  int power_p_roll, power_d_roll, power_i_roll, power; //(the angle is the orizontal due to the sensor inclination)
+  int der, integ;
+  power_d_roll = KP*roll;
+  der          = (roll-prevroll)/dt;
+  power_d_roll = KD*der;
+  integ_roll   = integ_roll + dt*roll;
+  power_i_roll = KI*integ_roll;
+  power        = power_p_roll+power_d_roll+power_d_roll;
+  if(power > MAX_IMU) power_p_roll = MAX_IMU;
+  prevroll     = roll;
   return power;
 }
 

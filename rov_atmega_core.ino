@@ -94,8 +94,10 @@ void sensorsPrepare(){
 }
 
 void loop() {
-
+  
   if( timer.onRestart() ){    
+    long int now = micros();
+    
     sensorsRead();
   
     sensorsPrepare();
@@ -107,6 +109,8 @@ void loop() {
 
     //IMU's pitch is ROV's roll and viceversa
     motors.evaluateVertical(currentPressure, imu.pitch, imu.roll);
+    long int del = micros() - now;
+    Serial.println(del);
   }
   
 }

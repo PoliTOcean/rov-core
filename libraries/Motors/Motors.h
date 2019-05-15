@@ -55,6 +55,10 @@ class Motors {
     const int signUR = 1;
     const int signUL = 1;
     const int signUB = 1;
+    float prevpitch;
+    float prevroll;
+    float integ_pitch;
+    float integ_roll;
 
     const float mulPower[3] = {
       SLOW_POWER, MEDIUM_POWER, FAST_POWER
