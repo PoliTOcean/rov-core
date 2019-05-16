@@ -21,6 +21,9 @@
 #define KD  0
 #define kDep  25
 #define dt    0.03
+#define thresh_pitch  0.05    // 3 degree
+#define thresh_roll  0.05     // 3 degree
+
 
 
 void Motors::configure(){
@@ -49,14 +52,24 @@ void Motors::configure(){
 float Motors::calcPitchPower(float pitch){
   int power_p_pitch, power_d_pitch, power_i_pitch, power; //(the angle is the orizontal due to the sensor inclination)
   int der;
-  power_d_pitch = KP*pitch;
-  der           = (pitch-prevpitch)/dt;
-  power_d_pitch = KD*der;
-  integ_pitch   = integ_pitch + dt*pitch;
-  power_i_pitch = KI*integ_pitch;
-  power         = power_p_pitch+power_d_pitch+power_d_pitch;
-  if(power > MAX_IMU) power_p_pitch = MAX_IMU;
-  prevpitch     = pitch;
+
+  if (pitch < tresh_pitch)
+  {
+    power_d_pitch = KP*pitch;
+    der           = (pitch-prevpitch)/dt;
+    power_d_pitch = KD*der;
+    integ_pitch   = integ_pitch + dt*pitch;
+    power_i_pitch = KI*integ_pitch;
+    power         = power_p_pitch+power_d_pitch+power_d_pitch;
+    if(power > MAX_IMU) power_p_pitch = MAX_IMU;
+    prevpitch     = pitch;
+  }
+  else 
+  {
+    integ_pitch   = 0;
+    der           = 0;
+    prev_pitch    = 0;
+  }
   return power;
 }
 
@@ -64,14 +77,25 @@ float Motors::calcPitchPower(float pitch){
 float Motors::calcRollPower(float roll){
   int power_p_roll, power_d_roll, power_i_roll, power; //(the angle is the orizontal due to the sensor inclination)
   int der, integ;
-  power_d_roll = KP*roll;
-  der          = (roll-prevroll)/dt;
-  power_d_roll = KD*der;
-  integ_roll   = integ_roll + dt*roll;
-  power_i_roll = KI*integ_roll;
-  power        = power_p_roll+power_d_roll+power_d_roll;
-  if(power > MAX_IMU) power_p_roll = MAX_IMU;
-  prevroll     = roll;
+
+  if (roll < thresh_roll)
+  {
+    power_d_roll = KP*roll;
+    der          = (roll-prevroll)/dt;
+    power_d_roll = KD*der;
+    integ_roll   = integ_roll + dt*roll;
+    power_i_roll = KI*integ_roll;
+    power        = power_p_roll+power_d_roll+power_d_roll;
+    if(power > MAX_IMU) power_p_roll = MAX_IMU;
+    prevroll     = roll;
+  }
+  else
+  {
+    integ_roll   = 0;
+    der          = 0;
+    prev_roll    = 0;
+  }
+  
   return power;
 }
 
