@@ -16,7 +16,7 @@
 #define BR_pin  3
 #define BL_pin  2
 
-#define kAng  50
+#define kAng  150
 #define kDep  25
 
 
@@ -32,7 +32,7 @@ void Motors::configure(){
 
     Motors::stop();       // do not run the motors untill `start()` is called
     savePressure = false;
-    powerMode = MEDIUM;
+    powerMode = SLOW;
 
     configured = true;
 }
@@ -78,7 +78,7 @@ void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
    } //else, if it is not (still) pressing up/down buttons
    else //change value for autoquote
      depthControl = -(requested_pressure-current_pressure)*kDep;
-
+/*
    Serial.print("Pitch: ");
    Serial.print(pitch);
    Serial.print("\tRoll: ");
@@ -92,7 +92,7 @@ void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
    Serial.print("\tCurrent pressure: ");
    Serial.print(current_pressure);
    Serial.print("\tDepth control power: ");
-   Serial.println(depthControl);
+   Serial.println(depthControl);*/
 
    //adding values for UD movement/autoquote
    UL.set_value(valUD + ( depthControl - pitchPower - rollPower) / mulPower[powerMode] );
