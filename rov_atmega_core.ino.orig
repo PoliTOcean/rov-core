@@ -94,8 +94,11 @@ void sensorsPrepare(){
 
 void loop() {
   
+<<<<<<< HEAD
+=======
   brSensor.read();
   
+>>>>>>> release/v1.0
   if( timer.onRestart() ){    
     long int now = micros();
     

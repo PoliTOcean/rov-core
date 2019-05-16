@@ -16,9 +16,13 @@
 #define BR_pin  3
 #define BL_pin  2
 
+<<<<<<< HEAD
 #define KP  250
 #define KI  0
 #define KD  0
+=======
+#define kAng  250
+>>>>>>> release/v1.0
 #define kDep  25
 #define dt    0.03
 #define thresh_pitch  0.05    // 3 degree

@@ -25,7 +25,7 @@
 #define GYRO_ZOUT_H   0x47
 #define GYRO_ZOUT_L   0x48
 
-#define IMU_dT        0.03
+#define IMU_dT        0.012
 
 class IMU {
   public:

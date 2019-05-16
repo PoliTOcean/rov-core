@@ -44,8 +44,8 @@ void IMU::complementaryFilter(){
         rollAcc = atan2(Ay, Az);
         pitchAcc = asin(-Ax/fabs(accTot));
 
-        roll = roll * 0.9 + rollAcc * 0.1;
-        pitch = pitch * 0.9 + pitchAcc * 0.1;   
+        roll = roll * 0.8 + rollAcc * 0.2;
+        pitch = pitch * 0.8 + pitchAcc * 0.2;   
     }
 }
 
@@ -77,9 +77,9 @@ void IMU::imuRead(){
   Az = (Az - 1660.462)  / 17123.54;
 
   // Convert the data
-  Gx = -(Gx - 349.262)/3000;
-  Gy = -(Gy - 154.551)/3000;
-  Gz = (Gz + 176.136)/3000;
+  Gx = -(Gx - 349.262)/2500;
+  Gy = -(Gy - 154.551)/2500;
+  Gz = (Gz + 176.136)/2500;
   
   complementaryFilter(); //call calculation function
 }
