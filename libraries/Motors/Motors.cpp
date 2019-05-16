@@ -6,6 +6,9 @@
 #define AXES_MAX    127
 #define AXES_MIN    -126
 
+#define PERCENTAGE 0.8 // 20%
+#define PWR_THRESHOLD (AXES_MAX * 7) - 100
+
 #define UR_pin  8
 #define UL_pin  7
 #define UB_pin  4
@@ -94,11 +97,26 @@ void Motors::evaluateHorizontal() {
     BR.set_value(0);
     return;
   }
-  // I puntatori si riferiscono ai motori
+
   FL.set_value(signFL * (-y+x+rz));
   FR.set_value(signFR * (-y-x-rz));
   BL.set_value(signBL * (-y-x+rz));
   BR.set_value(signBR * (-y+x-rz));
+
+  // if the rov request full power  for all its motors reduce the
+  // value of BL and BR in a certain percentage in order to 
+  // prevent ESC protection
+  if(powerMode == power::FAST
+    && getTotalPower() > PWR_THRESHOLD){
+      int new_BL = BL.get_value() * PERCENTAGE;
+      int new_BR = BR.get_value() * PERCENTAGE;
+      BL.set_value(new_BL);
+      BR.set_value(new_BR));
+  }
+  
+
+  
+  
 }
 
 void Motors::start(float current_pressure){  
@@ -160,10 +178,26 @@ void Motors::setPower(power pwr){
   BR.setPower((int)(mul*DEFAULT_POWER));
   BL.setPower((int)(mul*DEFAULT_POWER));
 
+  // if the rov is in MODE SLOW increase the
+  // top motors power via an average
+  // of the  MEDIUM and SLOW weights
   if(pwr == SLOW) mul = ( mulPower[static_cast<int>(MEDIUM)]+mulPower[static_cast<int>(SLOW)] ) / 2;
   UR.setPower((int)(mul*DEFAULT_POWER));
   UL.setPower((int)(mul*DEFAULT_POWER));
   UB.setPower((int)(mul*DEFAULT_POWER));
 
   this->powerMode = pwr;
+}
+
+int Motors::getTotalPower(){
+  int total;
+  total += FR.get_value();
+  total += FL.get_value();
+  total += BR.get_value();
+  total += BL.get_value();
+  total += UR.get_value();
+  total += UL.get_value();
+  total += FB.get_value();
+  return total;
+
 }
