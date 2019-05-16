@@ -50,7 +50,7 @@ float Motors::calcPitchPower(float pitch){
   static float prevpitch = 0;
   static float integ_pitch = 0;
 
-  if (pitch > thresh_pitch)
+  if (abs(pitch) > thresh_pitch)
   {
     power_p_pitch = KP*pitch;
     der           = (pitch-prevpitch)/dt;
@@ -77,7 +77,7 @@ float Motors::calcRollPower(float roll){
   static float prevroll = 0;
   static float integ_roll = 0;
 
-  if (roll > thresh_roll)
+  if (abs(roll) > thresh_roll)
   {
     power_p_roll = KP*roll;
     der          = (roll-prevroll)/dt;
