@@ -20,7 +20,7 @@
 #define KI  0
 #define KD  0
 #define kDep  25
-#define dt    0.03
+#define dt    IMU_dT
 #define thresh_pitch  0.05    // 3 degree
 #define thresh_roll  0.05     // 3 degree
 
@@ -45,7 +45,7 @@ void Motors::configure(){
 
 //function for pitch power calculation
 float Motors::calcPitchPower(float pitch){
-  int power_p_pitch, power_d_pitch, power_i_pitch, power; //(the angle is the orizontal due to the sensor inclination)
+  int power_p_pitch, power_d_pitch, power_i_pitch, power=0; //(the angle is the orizontal due to the sensor inclination)
   int der;
   static float prevpitch = 0;
   static float integ_pitch = 0;
@@ -72,7 +72,7 @@ float Motors::calcPitchPower(float pitch){
 
 //function for roll power calculation. Same as above, without sign inversion
 float Motors::calcRollPower(float roll){
-  int power_p_roll, power_d_roll, power_i_roll, power; //(the angle is the orizontal due to the sensor inclination)
+  int power_p_roll, power_d_roll, power_i_roll, power=0; //(the angle is the orizontal due to the sensor inclination)
   int der, integ;
   static float prevroll = 0;
   static float integ_roll = 0;
