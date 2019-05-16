@@ -55,12 +55,12 @@ float Motors::calcPitchPower(float pitch){
 
   if (pitch < tresh_pitch)
   {
-    power_d_pitch = KP*pitch;
+    power_p_pitch = KP*pitch;
     der           = (pitch-prevpitch)/dt;
     power_d_pitch = KD*der;
     integ_pitch   = integ_pitch + dt*pitch;
     power_i_pitch = KI*integ_pitch;
-    power         = power_p_pitch+power_d_pitch+power_d_pitch;
+    power         = power_p_pitch+power_d_pitch+power_i_pitch;
     if(power > MAX_IMU) power_p_pitch = MAX_IMU;
     prevpitch     = pitch;
   }
@@ -80,12 +80,12 @@ float Motors::calcRollPower(float roll){
 
   if (roll < thresh_roll)
   {
-    power_d_roll = KP*roll;
+    power_p_roll = KP*roll;
     der          = (roll-prevroll)/dt;
     power_d_roll = KD*der;
     integ_roll   = integ_roll + dt*roll;
     power_i_roll = KI*integ_roll;
-    power        = power_p_roll+power_d_roll+power_d_roll;
+    power        = power_p_roll+power_d_roll+power_i_roll;
     if(power > MAX_IMU) power_p_roll = MAX_IMU;
     prevroll     = roll;
   }
