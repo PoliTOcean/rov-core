@@ -106,6 +106,7 @@ void Motors::evaluateHorizontal() {
   // if the rov request full power  for all its motors reduce the
   // value of BL and BR in a certain percentage in order to 
   // prevent ESC protection
+
   if(powerMode == power::FAST
     && getTotalPower() > PWR_THRESHOLD){
       int new_BL = BL.get_value() * PERCENTAGE;
@@ -113,10 +114,6 @@ void Motors::evaluateHorizontal() {
       BL.set_value(new_BL);
       BR.set_value(new_BR));
   }
-  
-
-  
-  
 }
 
 void Motors::start(float current_pressure){  

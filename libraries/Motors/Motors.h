@@ -73,7 +73,7 @@ class Motors {
     float calcPitchPower();
     float calcRollPower();
 
-    
+    int getTotalPower();
 };
 
 
