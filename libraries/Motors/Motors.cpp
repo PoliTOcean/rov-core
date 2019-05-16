@@ -53,7 +53,7 @@ float Motors::calcPitchPower(float pitch){
   int power_p_pitch, power_d_pitch, power_i_pitch, power; //(the angle is the orizontal due to the sensor inclination)
   int der;
 
-  if (pitch < tresh_pitch)
+  if (pitch > tresh_pitch)
   {
     power_p_pitch = KP*pitch;
     der           = (pitch-prevpitch)/dt;
