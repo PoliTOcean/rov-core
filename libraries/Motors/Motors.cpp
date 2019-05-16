@@ -78,7 +78,7 @@ float Motors::calcRollPower(float roll){
   int power_p_roll, power_d_roll, power_i_roll, power; //(the angle is the orizontal due to the sensor inclination)
   int der, integ;
 
-  if (roll < thresh_roll)
+  if (roll > thresh_roll)
   {
     power_p_roll = KP*roll;
     der          = (roll-prevroll)/dt;
