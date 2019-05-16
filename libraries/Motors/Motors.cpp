@@ -16,7 +16,7 @@
 #define BR_pin  3
 #define BL_pin  2
 
-#define kAng  150
+#define kAng  250
 #define kDep  25
 
 
@@ -32,7 +32,7 @@ void Motors::configure(){
 
     Motors::stop();       // do not run the motors untill `start()` is called
     savePressure = false;
-    powerMode = SLOW;
+    setPower(power::SLOW);
 
     configured = true;
 }
