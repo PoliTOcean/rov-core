@@ -118,19 +118,19 @@ void Motors::stopDown(){
 }
 
 void Motors::goUp(){
-  up = 1;
+  up = 0.6;
 }
 
 void Motors::goUpFast(){
-  up = 1.5;
-}
-
-void Motors::stopUpFast(){
   up = 1;
 }
 
+void Motors::stopUpFast(){
+  up = 0.6;
+}
+
 void Motors::goDown(){
-  down = 1;
+  down = 0.8;
 }
 
 void Motors::setX(int x){
