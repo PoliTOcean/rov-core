@@ -22,9 +22,7 @@ RBD::Timer timer;
 
 using namespace Commands;
 
-void setup() {
-   // analogReference(INTERNAL);
-    
+void setup() {    
     Serial.begin(9600);                   // initialize comunication via the serial port
 
     imu.configure();                      // initialize IMU sensor
@@ -56,6 +54,7 @@ void setup() {
 
 void sensorsRead(){
   temperature = analogRead(A1)/2.046;
+  brSensor.read();
   currentPressure = brSensor.pressure();
   imu.imuRead();
   imu.complementaryFilter();
@@ -91,10 +90,7 @@ void sensorsPrepare(){
   sensors[static_cast<int>(sensor_t::TEMPERATURE_INT)]  = static_cast<byte>( imu.temperature );
 }
 
-void loop() {
-  
-  brSensor.read();
-  
+void loop() { 
   if( timer.onRestart() ){    
     long int now = micros();
     
