@@ -19,7 +19,7 @@ MS5837 brSensor;  // pressure sensor
 Motors motors(dt);  // motors manager
 RBD::Timer timer;
 
-using namespace Commands;
+using namespace Politocean::Constants::Commands;
 
 void setup() {    
     Serial.begin(9600);                   // initialize comunication via the serial port
@@ -116,7 +116,7 @@ ISR (SPI_STC_vect)
     // check data to send
     if (sensorsTerminator)
     {
-      SPDR = Spi::SENSORS_DELIM;
+      SPDR = ATMega::SPI::Delims::SENSORS;
       sensorsTerminator = false;
       s = sensor_t::First;
     }
@@ -137,13 +137,13 @@ ISR (SPI_STC_vect)
     }
 
     // check received data
-    if (c == Spi::COMMAND_DELIM)
+    if (c == ATMega::SPI::Delims::COMMAND)
     {
       //the next incoming data is a button
       nextIsCommand=true;
       return;
     }
-    else if (c == Spi::AXES_DELIM)
+    else if (c == ATMega::SPI::Delims::AXES)
     {
       nextIsAxes = true;
       return;
@@ -153,37 +153,37 @@ ISR (SPI_STC_vect)
     if(nextIsCommand){      
       // process the nextIsCommand
       switch(c){
-        case Actions::START_AND_STOP:
+        case ATMega::SPI::START_AND_STOP:
           if (motors_->started)
             motors_->stop();
           else
             motors_->start(currentPressure);
         break;
-        case Actions::VDOWN_ON:
+        case ATMega::SPI::VDOWN_ON:
           motors_->goDown();
         break;
-        case Actions::VDOWN_OFF:
+        case ATMega::SPI::VDOWN_OFF:
           motors_->stopDown();
         break;
-        case Actions::VUP_ON:
+        case ATMega::SPI::VUP_ON:
           motors_->goUp();
         break;
-        case Actions::VUP_OFF:
+        case ATMega::SPI::VUP_OFF:
           motors_->stopUp();
         break;
-        case Actions::VUP_FAST_ON:
+        case ATMega::SPI::VUP_FAST_ON:
           motors_->goUpFast();
         break;
-        case Actions::VUP_FAST_OFF:
+        case ATMega::SPI::VUP_FAST_OFF:
           motors_->stopUpFast();
         break;
-        case Actions::FAST:
+        case ATMega::SPI::FAST:
           motors_->setPower(Motors::FAST);
         break;
-        case Actions::MEDIUM:
+        case ATMega::SPI::MEDIUM:
           motors_->setPower(Motors::MEDIUM);
         break;
-        case Actions::SLOW:
+        case ATMega::SPI::SLOW:
           motors_->setPower(Motors::SLOW);
         break;
        }
@@ -193,15 +193,15 @@ ISR (SPI_STC_vect)
     else if (nextIsAxes)
     {
       switch(axis){
-       case 0:         //  read x
+       case ATMega::Axis::X_AXES:         //  read x
         motors_->setX(c-127);
        break;
       
-       case 1:        // read y
+       case ATMega::Axis::Y_AXES:        // read y
        motors_->setY(c-127);
        break;
       
-       case 2:        //  read rz
+       case ATMega::Axis::RZ_AXES:       //  read rz
        motors_->setRz(c-127);
        break;
       }
