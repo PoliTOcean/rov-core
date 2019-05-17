@@ -8,40 +8,37 @@
 
 #define SENSORS_SIZE static_cast<int>(sensor_t::Last)+1
 
+#define dt 0.012    //12ms -> IMU needs to be calibrated with this dt
+
 volatile byte sensors[SENSORS_SIZE];
 volatile float currentPressure;
 volatile bool updatedAxis = false;
-
 float temperature;
 
-IMU imu;  // imu sensor
-
+IMU imu(dt);  // imu sensor
 MS5837 brSensor;  // pressure sensor
-Motors motors;  // motors manager
-
+Motors motors(dt);  // motors manager
 RBD::Timer timer;
 
 using namespace Commands;
 
-void setup() {
-   // analogReference(INTERNAL);
-    
+void setup() {    
     Serial.begin(9600);                   // initialize comunication via the serial port
 
     imu.configure();                      // initialize IMU sensor
 
-    delay(1000);
+    delay(500);
     
     brSensor.setModel(MS5837::MS5837_02BA);
     brSensor.setFluidDensity(997);        // kg/m^3 (freshwater, 1029 for seawater)
     brSensor.init();                      // initialize pressure sensor
 
-    delay(1000);
+    delay(500);
 
     /** MOTORS INIT **/
     motors.configure();                // initialize motors
     
-    delay(3000);                          // delay of 1 second to make actions complete
+    delay(1500);                          // delay of 1.5 seconds to make actions complete
 
     /** SPI SETUP **/
     cli();
@@ -51,12 +48,13 @@ void setup() {
     SPI.attachInterrupt();                // enable SPI
     sei();
 
-    timer.setTimeout(IMU_dT*1000);
+    timer.setTimeout(dt*1000);
     timer.restart();
 }
 
 void sensorsRead(){
   temperature = analogRead(A1)/2.046;
+  brSensor.read();
   currentPressure = brSensor.pressure();
   imu.imuRead();
   imu.complementaryFilter();
@@ -92,10 +90,7 @@ void sensorsPrepare(){
   sensors[static_cast<int>(sensor_t::TEMPERATURE_INT)]  = static_cast<byte>( imu.temperature );
 }
 
-void loop() {
-  
-  brSensor.read();
-  
+void loop() { 
   if( timer.onRestart() ){    
     long int now = micros();
     

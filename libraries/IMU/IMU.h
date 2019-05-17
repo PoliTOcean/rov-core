@@ -25,10 +25,10 @@
 #define GYRO_ZOUT_H   0x47
 #define GYRO_ZOUT_L   0x48
 
-#define IMU_dT        0.012
-
 class IMU {
   public:
+    IMU(float dt) : dt(dt) {}
+
     void configure(); 
     void printValues();
     void imuRead();
@@ -40,7 +40,7 @@ class IMU {
   private:
     float Ax,Ay,Az,Gx,Gy,Gz;
     float gyrData;
-    int dt;
+    float dt;
     unsigned long lastUpdate;
     bool updatedValues;
 };
