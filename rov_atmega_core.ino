@@ -12,7 +12,6 @@
 
 volatile byte sensors[SENSORS_SIZE];
 volatile float currentPressure;
-volatile bool updatedAxis = false;
 float temperature;
 
 IMU imu(dt);  // imu sensor
@@ -92,21 +91,14 @@ void sensorsPrepare(){
 
 void loop() { 
   if( timer.onRestart() ){    
-    long int now = micros();
-    
     sensorsRead();
   
     sensorsPrepare();
     
-    if(updatedAxis){
-      motors.evaluateHorizontal();
-      updatedAxis=false;
-    }
+    motors.evaluateHorizontal();
 
     //IMU's pitch is ROV's roll and viceversa
     motors.evaluateVertical(currentPressure, imu.pitch, imu.roll);
-    long int del = micros() - now;
-    Serial.println(del);
   }
   
 }
@@ -218,7 +210,5 @@ ISR (SPI_STC_vect)
         nextIsAxes = false;
         axis = 0;
       }
-
-      updatedAxis = true;
     }
 }

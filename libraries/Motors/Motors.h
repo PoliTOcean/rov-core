@@ -17,9 +17,9 @@
 
 #define MAX_IMU     80
 
-#define SLOW_POWER    0.7
-#define MEDIUM_POWER  1.3
-#define FAST_POWER    3.3
+#define SLOW_POWER    30
+#define MEDIUM_POWER  60
+#define FAST_POWER    100
 
 #define KP_roll   250
 #define KI_roll   0
@@ -56,7 +56,7 @@ class Motors {
     bool savePressure;
     volatile int requested_pressure;
     
-    float input_axis_min, input_axis_max, motors_min, motors_max;
+    volatile float input_axis_min, input_axis_max, motors_min, motors_max;
 
     Motor FL, FR, BL, BR, UR, UL, UB;
 
