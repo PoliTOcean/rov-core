@@ -12,8 +12,8 @@
 #include "IMU.h"
 #include "PIDController.h"
 
-#define DEF_IN_AXES_MIN 1
-#define DEF_IN_AXES_MAX 254
+#define DEF_AXIS_MIN -126
+#define DEF_AXIS_MAX 127
 
 #define MAX_IMU     80
 
@@ -56,7 +56,7 @@ class Motors {
     bool savePressure;
     volatile int requested_pressure;
     
-    volatile float input_axis_min, input_axis_max, motors_min, motors_max;
+    volatile float axis_min, axis_max;
 
     Motor FL, FR, BL, BR, UR, UL, UB;
 
@@ -76,24 +76,20 @@ class Motors {
     
 
     Motors( float dt,
-            float in_axis_min   = DEF_IN_AXES_MIN,
-            float in_axis_max   = DEF_IN_AXES_MAX,
-            float motors_min    = DEF_MOTORS_MIN,
-            float motors_max    = DEF_MOTORS_MAX) 
-    :  input_axis_min(in_axis_min),
-       input_axis_max(in_axis_max),
-       motors_min(motors_min),
-       motors_max(motors_max),
-       FL(motors_min, motors_max, powerPerc[(int)power::SLOW]),
-       FR(motors_min, motors_max, powerPerc[(int)power::SLOW]),       
-       BL(motors_min, motors_max, powerPerc[(int)power::SLOW]),       
-       BR(motors_min, motors_max, powerPerc[(int)power::SLOW]),       
-       UL(motors_min, motors_max, powerPerc[(int)power::SLOW]),
-       UR(motors_min, motors_max, powerPerc[(int)power::SLOW]),       
-       UB(motors_min, motors_max, powerPerc[(int)power::SLOW]),               
+            float axis_min  = DEF_AXIS_MIN,
+            float axis_max  = DEF_AXIS_MAX)
+    :  axis_min(axis_min),
+       axis_max(axis_max),
+       FL(axis_min, axis_max, powerPerc[(int)power::SLOW]),
+       FR(axis_min, axis_max, powerPerc[(int)power::SLOW]),
+       BL(axis_min, axis_max, powerPerc[(int)power::SLOW]),
+       BR(axis_min, axis_max, powerPerc[(int)power::SLOW]),
+       UL(axis_min, axis_max, powerPerc[(int)power::SLOW]),
+       UR(axis_min, axis_max, powerPerc[(int)power::SLOW]),
+       UB(axis_min, axis_max, powerPerc[(int)power::SLOW]),
        pitchCorrection(KP_pitch, KI_pitch, KD_pitch, dt, THRESHOLD_pitch, MAX_IMU),
        rollCorrection(KP_roll, KI_roll, KD_roll, dt, THRESHOLD_roll, MAX_IMU),
-       depthCorrection(KP_depth, KI_depth, KD_depth, dt, THRESHOLD_depth, input_axis_max)
+       depthCorrection(KP_depth, KI_depth, KD_depth, dt, THRESHOLD_depth, axis_max)
     {}
 
     void configure();
@@ -101,9 +97,9 @@ class Motors {
     void start(int current_pressure);
     void stop();
 
-    void setX(byte x);
-    void setY(byte y);
-    void setRz(byte rz);
+    void setX(int x);
+    void setY(int y);
+    void setRz(int rz);
     
     void stopUp();
     void stopDown();

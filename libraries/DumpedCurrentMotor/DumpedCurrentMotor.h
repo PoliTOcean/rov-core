@@ -3,9 +3,6 @@
 #ifndef POLITOCEAN_LIMIT_CURRENT_H
 #define POLITOCEAN_LIMIT_CURRENT_H
 
-#define DEF_MOTORS_MIN -126
-#define DEF_MOTORS_MAX 127
-
 #define MAX_POWER         400
 
 //useful constants

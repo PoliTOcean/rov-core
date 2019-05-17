@@ -51,7 +51,7 @@ void Motors::evaluateVertical(int current_pressure, float roll, float pitch){
    int valUD=0, depthCorrectionPower=0;            //reset valUD
    if(down>0 || up>0){     //controlled up-down from joystick
      savePressure = true;                           //it has to save pressure when finished
-     valUD = (up-down)*motors_max; //fixed value depending on buttons pressed
+     valUD = (up-down)*axis_max; //fixed value depending on buttons pressed
    }else if(savePressure){
      requested_pressure = current_pressure;
      savePressure = false;
@@ -133,16 +133,22 @@ void Motors::goDown(){
   down = 1;
 }
 
-void Motors::setX(byte x){
-  this->x = map(x, input_axis_min, input_axis_max, motors_min, motors_max);
+void Motors::setX(int x){
+  if (x < axis_min) x = axis_min;
+  else if (x > axis_max) x = axis_max;
+  this->x = x;
 }
 
-void Motors::setY(byte y){
-  this->y = map(y, input_axis_min, input_axis_max, motors_min, motors_max);
+void Motors::setY(int y){
+  if (y < axis_min) y = axis_min;
+  else if (y > axis_max) y = axis_max;
+  this->y = y;
 }
 
-void Motors::setRz(byte rz){
-  this->rz = map(rz, input_axis_min, input_axis_max, motors_min, motors_max);
+void Motors::setRz(int rz){
+  if (rz < axis_min) rz = axis_min;
+  else if (rz > axis_max) rz = axis_max;
+  this->rz = rz;
 }
 
 void Motors::setPower(power pwr){

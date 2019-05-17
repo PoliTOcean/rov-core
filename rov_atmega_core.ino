@@ -194,15 +194,15 @@ ISR (SPI_STC_vect)
     {
       switch(axis){
        case 0:         //  read x
-        motors_->setX(c);
+        motors_->setX(c-127);
        break;
       
        case 1:        // read y
-       motors_->setY(c);
+       motors_->setY(c-127);
        break;
       
        case 2:        //  read rz
-       motors_->setRz(c);
+       motors_->setRz(c-127);
        break;
       }
       
