@@ -69,8 +69,7 @@ class Motors {
     };
 
     volatile bool started;
-    volatile float up;
-    volatile int down;
+    volatile float up, down;
     volatile Motors::power powerMode;
     bool configured = false;
     
