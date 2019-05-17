@@ -2,8 +2,6 @@
 #include "Servo.h"
 #include "Arduino.h"
 
-#define MAX_VAL 127
-#define MIN_VAL -126
 
 /*
  * in the vect vector are saved all the instances of the motor that will be create in the following way
@@ -22,56 +20,15 @@ struct list_Motor
 };
 list_Motor* list = NULL;
 
-/** init function:
- *  sets max and min values, as well as the percentage to calculate the step
- *
- *  @param max value
- *  @param min value
- *  @param percentage of step
- *
- *  @return void
+/**
+ * set power function
  */
-void Motor::init(int maxi =  DEFAULT_MAX_VAL, int mini = DEFAULT_MIN_VAL,  int perc = DEFAULT_PERC)
-{
-  //Timer setup
-  cli();
-  TCCR2A = 0;                                    // set entire TCCR1A register to 0
-  TCCR2B = 0;                                    // same for TCCR1B
-  TCNT2  = 0;                                    // initialize counter value to 0
-  OCR2A  = 255;                                  // COMPARE REGISTER A = (16*10^6) / (1*1024) - 1 (must be <256 -> 8 bit)-------> [16*10^6/(prescale*desired frequncy)] -1
-  TCCR2B |= (1 << WGM22);                        // turn on CTC mode
-  TCCR2B |= (1 << CS22) | (1 << CS20);           // Set CS12 and CS10 bits for 1024 prescaler
+void Motor::set_power(int powerPerc){
+  int power = 0;
+  if(powerPerc < 0) powerPerc = 0;
+  else if(powerPerc > 100) powerPerc = 100;
 
-  //boundaries check
-  if (maxi >= DEFAULT_MAX_VAL) maxi = DEFAULT_MAX_VAL;
-  if (mini <= DEFAULT_MIN_VAL) mini = DEFAULT_MIN_VAL;
-
-  //percentage check
-  if (perc >= DEFAULT_MAX_PERC)
-    perc = DEFAULT_MAX_PERC;
-  else if (perc <= 0)
-    perc = DEFAULT_PERC;
-
-  //boundaries and step setup
-  this->maxval      = maxi;
-  this->minval      = mini;
-  this->step        = (this->maxval - this->minval) * perc / 100;
-
-  //functional values setup
-  this->value       = SERVO_STOP_VALUE;
-  this->reach_value = this->value;
-  this->pin = -1;
-
-  //final motor setup
-  this->code        = i;
-  vect[i] = this;
-  i++;
-  sei();
-}
-
-void Motor::setPower(int power){
-  if(power < 0) power = 0;
-  else if(power > MAX_POWER) power = MAX_POWER;
+  power = powerPerc*MAX_POWER/100;
 
   this->minval = SERVO_STOP_VALUE - power;
   this->maxval = SERVO_STOP_VALUE + power;
@@ -146,11 +103,11 @@ bool Motor::update()                    // update the current value by one step
  *
  *  @return void
  */
-void Motor::set_value(int val)                                      // set the new value of the current to reach and the step
+void Motor::set_value(int val)                                       // set the new value of the current to reach and the step
 {
-  if (val > MAX_VAL) val = MAX_VAL;                         // saturation max value
-  if (val < MIN_VAL) val = MIN_VAL;                         // stauration min value
-  this->reach_value = map(val, MIN_VAL, MAX_VAL, this->minval, this->maxval);
+  if (val > input_maxval) val = input_maxval;                        // saturation max value
+  else if (val < input_minval) val = input_minval;                   // stauration min value
+  this->reach_value = map(val, input_minval, input_maxval, this->minval, this->maxval);
   
   if (!this->update()){
     insert(this->code);
@@ -166,27 +123,37 @@ bool Motor::is_value_reached(){
 
 
 /** constructors **/
-Motor::Motor()
+Motor::Motor(int in_min, int in_max, int startPowerPerc, int stepPerc)
+    : input_minval(in_min), input_maxval(in_max)
 {
-  init();
+  if(startPowerPerc < 0) startPowerPerc = 0;
+  else if(startPowerPerc > 100) startPowerPerc = 100;
+  set_power(startPowerPerc);
+
+  if(stepPerc < 0) stepPerc = 0;
+  else if(stepPerc > 100) stepPerc = 100;
+  step = (maxval - minval) * stepPerc / 100;
+
+  //Timer setup
+  cli();
+  TCCR2A = 0;                                    // set entire TCCR1A register to 0
+  TCCR2B = 0;                                    // same for TCCR1B
+  TCNT2  = 0;                                    // initialize counter value to 0
+  OCR2A  = 255;                                  // COMPARE REGISTER A = (16*10^6) / (1*1024) - 1 (must be <256 -> 8 bit)-------> [16*10^6/(prescale*desired frequncy)] -1
+  TCCR2B |= (1 << WGM22);                        // turn on CTC mode
+  TCCR2B |= (1 << CS22) | (1 << CS20);           // Set CS12 and CS10 bits for 1024 prescaler
+
+  //functional values setup
+  this->value       = SERVO_STOP_VALUE;
+  this->reach_value = this->value;
+  this->pin = -1;
+
+  //final motor setup
+  this->code        = i;
+  vect[i] = this;
+  i++;
+  sei();
 }
-
-Motor::Motor(int perc)
-{
-  init(DEFAULT_MAX_VAL, DEFAULT_MIN_VAL, perc);
-}
-
-Motor::Motor(int maxval, int minval)
-{
-  init (maxval, minval);
-}
-
-
-Motor::Motor(int maxval, int minval, int perc)
-{
-  init(maxval, minval, perc);
-}
-
 
 /** getters **/
 int Motor::get_pin(){

@@ -3,11 +3,14 @@
 #ifndef POLITOCEAN_LIMIT_CURRENT_H
 #define POLITOCEAN_LIMIT_CURRENT_H
 
-#define DEFAULT_POWER      120
-#define MAX_POWER          400
+#define DEF_MOTORS_MIN -126
+#define DEF_MOTORS_MAX 127
+
+#define MAX_POWER         400
 
 //useful constants
-#define DEFAULT_PERC      2                                         // default percentage of the step
+#define DEF_POWER_PERC    30
+#define DEF_STEP_PERC     1                                         // default percentage of the step
 #define DEFAULT_MAX_PERC  30                                        // default max for the percentage for the step          
 #define DEFAULT_MAX_VAL   1700					 	                    // default max value for the actual value
 #define DEFAULT_MIN_VAL   1300                                      // default min value for the actual value
@@ -34,12 +37,11 @@ class Motor {
       volatile int code;                                                      // univoque value of the motor
       volatile int pin;                                                       // pin where the motor is attached to
       volatile Servo motor;                                                   // Servo instance
+      volatile int input_minval;
+      volatile int input_maxval;
 
-   public:                           		      
-      Motor();
-      Motor(int stepp);
-      Motor(int maxval, int minval);
-      Motor(int minim,int maxim, int stepp);
+   public:
+      Motor(int in_min, int in_max, int startPowerPerc = DEF_POWER_PERC, int stepPerc = DEF_STEP_PERC);
       
       void set_value(int val);
       bool is_value_reached();
@@ -53,10 +55,7 @@ class Motor {
       void attach(int pin);
       void detach();
       bool update();
-      void setPower(int power);
-      
-   protected:
-      void init(int, int, int);
+      void set_power(int powerPerc);
  
 };
 

@@ -17,9 +17,9 @@ void IMU::complementaryFilter(){
     float accTot;
     
     // add real dt with micros
-    droll   = -Gx * IMU_dT;   // Angle around the X-axis (upside-down)
-    dpitch  = -Gy * IMU_dT;   // Angle around the Y-axis (upside-down)
-    dyaw    =  Gz * IMU_dT;   // Angle around the Z-axis
+    droll   = -Gx * dt;   // Angle around the X-axis (upside-down)
+    dpitch  = -Gy * dt;   // Angle around the Y-axis (upside-down)
+    dyaw    =  Gz * dt;   // Angle around the Z-axis
 
     cdr=cos(droll);
     cdp=cos(dpitch);
