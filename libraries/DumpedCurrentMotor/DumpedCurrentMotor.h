@@ -26,20 +26,26 @@
  */
 class Motor {
    private:
-      volatile int value;                                            		      // current value
-      volatile int reach_value;                                      		      // value to reach
-      volatile int step;						                                          // step of the DumpedCurrentMotor
-      volatile int maxval;                                           		      // maximum value of the DumpedCurrentMotor
-      volatile int minval;                                                    // minimum value of the DumpedCurrentMotor
-      volatile int code;                                                      // univoque value of the motor
-      volatile int pin;                                                       // pin where the motor is attached to
-      volatile Servo motor;                                                   // Servo instance
-      volatile int input_minval;
-      volatile int input_maxval;
+      volatile int value;                                   // current value
+      volatile int reach_value;                             // value to reach
+      volatile int step;						                  // step of the DumpedCurrentMotor
+      volatile int code;                                    // univoque value of the motor
+      volatile Servo motor;                                 // Servo instance
+      int pin;                                              // pin where the motor is attached to
+      int offset;                                           // offset value
+      int maxval;                                           // maximum value of the DumpedCurrentMotor
+      int minval;                                           // minimum value of the DumpedCurrentMotor
+      int input_minval;                                     // minimum value of the input power
+      int input_maxval;                                     // maximum value of the input power
+      int offset_minval;                                    // minimum value of the offset
+      int offset_maxval;                                    // maximum value of the offset
 
    public:
       Motor(int in_min, int in_max, int startPowerPerc = DEF_POWER_PERC, int stepPerc = DEF_STEP_PERC);
       
+      void set_offset_power(int powerPerc);
+      void set_offset(int offset);
+      int get_offset();
       void set_value(int val);
       bool is_value_reached();
       int get_value();

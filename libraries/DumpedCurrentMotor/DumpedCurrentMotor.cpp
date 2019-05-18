@@ -96,6 +96,47 @@ bool Motor::update()                    // update the current value by one step
   return this->is_value_reached();
 }
 
+/** Method to set the offset power
+ * 
+ * @param offset power percentage
+ * 
+ * @return void
+ */
+void Motor::set_offset_power(int powerPerc){
+  int power = 0;
+  if(powerPerc < 0) powerPerc = 0;
+  else if(powerPerc > 100) powerPerc = 100;
+
+  power = powerPerc*MAX_POWER/100;
+
+  this->offset_minval = SERVO_STOP_VALUE - power;
+  this->offset_maxval = SERVO_STOP_VALUE + power;
+}
+
+/** Method to set the offset value
+ * 
+ * @param offset
+ * 
+ * @return void
+ */
+void Motor::set_offset(int offset)
+{
+  if (offset > input_maxval) offset = input_maxval;                        // saturation max value
+  else if (offset < input_minval) offset = input_minval;                   // stauration min value
+  this->offset = map(offset, input_minval, input_maxval, this->offset_minval, this->offset_maxval);
+
+  int new_reach_value = this->reach_value + this->offset;
+  if (new_reach_value > this->maxval) new_reach_value = this->maxval;
+  else if (new_reach_value < this->minval) new_reach_value = this->minval;
+  this->reach_value = new_reach_value;
+
+  int new_value = this->value + offset;
+  if(new_value > this->reach_value || new_value < this->reach_value) new_value = this->reach_value;
+  this->value = new_value;
+
+  this->motor.writeMicroseconds(this->value);
+}
+
 
 /** Method to set the reach_value
  *
@@ -122,7 +163,7 @@ bool Motor::is_value_reached(){
 }
 
 
-/** constructors **/
+/** constructor **/
 Motor::Motor(int in_min, int in_max, int startPowerPerc, int stepPerc)
     : input_minval(in_min), input_maxval(in_max)
 {
@@ -158,6 +199,10 @@ Motor::Motor(int in_min, int in_max, int startPowerPerc, int stepPerc)
 /** getters **/
 int Motor::get_pin(){
   return this->pin;
+}
+
+int Motor::get_offset(){
+  return this->offset;
 }
 
 int Motor::get_reach_value()
