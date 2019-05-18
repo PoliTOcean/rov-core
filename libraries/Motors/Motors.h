@@ -17,9 +17,13 @@
 
 #define MAX_IMU     80
 
-#define SLOW_POWER    30
-#define MEDIUM_POWER  60
-#define FAST_POWER    100
+#define H_SLOW_POWER    15
+#define H_MEDIUM_POWER  50
+#define H_FAST_POWER    100
+
+#define V_SLOW_POWER    30
+#define V_MEDIUM_POWER  60
+#define V_FAST_POWER    100
 
 #define KP_roll   250
 #define KI_roll   0
@@ -47,8 +51,12 @@ class Motors {
     const int signUL = 1;
     const int signUB = 1;
 
-    const float powerPerc[3] = {
-      SLOW_POWER, MEDIUM_POWER, FAST_POWER
+    const float horizontalPowerPerc[3] = {
+      H_SLOW_POWER, H_MEDIUM_POWER, H_FAST_POWER
+    };
+
+    const float verticalPowerPerc[3] = {
+      V_SLOW_POWER, V_MEDIUM_POWER, V_FAST_POWER
     };
 
     volatile int x, y, rz;

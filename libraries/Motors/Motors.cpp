@@ -152,8 +152,6 @@ void Motors::setRz(int rz){
 }
 
 void Motors::setPower(power pwr){
-  if(!configured) return;
-
   int perc = powerPerc[static_cast<int>(pwr)];
 
   FR.set_power(perc);
