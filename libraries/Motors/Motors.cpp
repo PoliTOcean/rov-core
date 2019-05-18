@@ -152,14 +152,14 @@ void Motors::setRz(int rz){
 }
 
 void Motors::setPower(power pwr){
-  int perc = powerPerc[static_cast<int>(pwr)];
+  int perc = horizontalPowerPerc[static_cast<int>(pwr)];
 
   FR.set_power(perc);
   FL.set_power(perc);
   BR.set_power(perc);
   BL.set_power(perc);
 
-  if(pwr == SLOW) perc = ( powerPerc[static_cast<int>(MEDIUM)]+powerPerc[static_cast<int>(SLOW)] ) / 2;
+  perc = verticalPowerPerc[static_cast<int>(pwr)];
   UR.set_power(perc);
   UL.set_power(perc);
   UB.set_power(perc);
