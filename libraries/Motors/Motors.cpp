@@ -72,12 +72,12 @@ void Motors::evaluateVertical(int current_pressure, float roll, float pitch){
    Serial.print("\tCurrent pressure: ");
    Serial.print(current_pressure);
    Serial.print("\tDepth correction power: ");
-   Serial.println(depthCorrectionPower);*/
-
+   Serial.println(depthCorrectionPower);
+*/
    //adding values for UD movement/autoquote
-   UL.set_value(valUD + ( depthCorrectionPower - pitchPower - rollPower) / powerPerc[powerMode] );
-   UR.set_value(valUD + ( depthCorrectionPower - pitchPower + rollPower) / powerPerc[powerMode] );
-   UB.set_value(valUD + ( depthCorrectionPower + 1.8*pitchPower) / powerPerc[powerMode] );
+   UL.set_value(valUD + ( depthCorrectionPower - pitchPower - rollPower) );
+   UR.set_value(valUD + ( depthCorrectionPower - pitchPower + rollPower) );
+   UB.set_value(valUD + ( depthCorrectionPower + 1.8*pitchPower) );
 }
 
 /* function to evaluate powers for horizontal movement.*/
