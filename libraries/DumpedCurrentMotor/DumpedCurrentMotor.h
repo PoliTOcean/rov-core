@@ -41,7 +41,7 @@ class Motor {
       int offset_maxval;                                    // maximum value of the offset
 
    public:
-      Motor(int in_min, int in_max, int startPowerPerc = DEF_POWER_PERC, int stepPerc = DEF_STEP_PERC);
+      Motor(int in_min, int in_max, int offsetPower = 0, int startPowerPerc = DEF_POWER_PERC, int stepPerc = DEF_STEP_PERC);
       
       void set_offset_power(int powerPerc);
       void set_offset(int offset);

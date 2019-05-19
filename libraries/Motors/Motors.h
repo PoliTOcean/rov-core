@@ -15,7 +15,7 @@
 #define DEF_AXIS_MIN -126
 #define DEF_AXIS_MAX 127
 
-#define MAX_IMU     80
+#define OFFSET_POWER    6
 
 #define H_SLOW_POWER    15
 #define H_MEDIUM_POWER  50
@@ -91,11 +91,11 @@ class Motors {
        FR(axis_min, axis_max),
        BL(axis_min, axis_max),
        BR(axis_min, axis_max),
-       UL(axis_min, axis_max),
-       UR(axis_min, axis_max),
-       UB(axis_min, axis_max),
-       pitchCorrection(KP_pitch, KI_pitch, KD_pitch, dt, THRESHOLD_pitch, MAX_IMU),
-       rollCorrection(KP_roll, KI_roll, KD_roll, dt, THRESHOLD_roll, MAX_IMU),
+       UL(axis_min, axis_max, OFFSET_POWER),
+       UR(axis_min, axis_max, OFFSET_POWER),
+       UB(axis_min, axis_max, OFFSET_POWER),
+       pitchCorrection(KP_pitch, KI_pitch, KD_pitch, dt, THRESHOLD_pitch, axis_max),
+       rollCorrection(KP_roll, KI_roll, KD_roll, dt, THRESHOLD_roll, axis_max),
        depthCorrection(KP_depth, KI_depth, KD_depth, dt, THRESHOLD_depth, axis_max)
     {}
 

@@ -164,11 +164,10 @@ bool Motor::is_value_reached(){
 
 
 /** constructor **/
-Motor::Motor(int in_min, int in_max, int startPowerPerc, int stepPerc)
+Motor::Motor(int in_min, int in_max, int offsetPower, int startPowerPerc, int stepPerc)
     : input_minval(in_min), input_maxval(in_max)
 {
-  if(startPowerPerc < 0) startPowerPerc = 0;
-  else if(startPowerPerc > 100) startPowerPerc = 100;
+  set_offset_power(offsetPower);
   set_power(startPowerPerc);
 
   if(stepPerc < 0) stepPerc = 0;
