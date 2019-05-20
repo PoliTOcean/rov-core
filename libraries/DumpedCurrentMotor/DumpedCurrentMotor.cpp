@@ -109,8 +109,8 @@ void Motor::set_offset_power(int powerPerc){
 
   power = powerPerc*MAX_POWER/100;
 
-  this->offset_minval = SERVO_STOP_VALUE - power;
-  this->offset_maxval = SERVO_STOP_VALUE + power;
+  this->offset_minval = -power;
+  this->offset_maxval =  power;
 }
 
 /** Method to set the offset value
@@ -148,7 +148,11 @@ void Motor::set_value(int val)                                       // set the 
 {
   if (val > input_maxval) val = input_maxval;                        // saturation max value
   else if (val < input_minval) val = input_minval;                   // stauration min value
-  this->reach_value = map(val, input_minval, input_maxval, this->minval, this->maxval);
+
+  this->reach_value = map(val, input_minval, input_maxval, this->minval, this->maxval) + this->offset;
+  
+  if(this->reach_value > this->maxval) this->reach_value = this->maxval;
+  else if(this->reach_value < this->minval) this->reach_value = this->minval;
   
   if (!this->update()){
     insert(this->code);

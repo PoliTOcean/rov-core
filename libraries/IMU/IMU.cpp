@@ -39,7 +39,7 @@ void IMU::complementaryFilter(){
     pitch=atan2(cdp*(cdy*sp - cp*sdy*sr) + cp*cr*sdp, sqrt(pow(cdr*(sdy*sp + cdy*cp*sr) - sdr*(sdp*(cdy*sp - cp*sdy*sr) - cdp*cp*cr),2)+pow(- sdr*(sdy*sp + cdy*cp*sr) - cdr*(sdp*(cdy*sp - cp*sdy*sr) - cdp*cp*cr),2)));
  
     accTot = sqrt(pow(abs(Ax),2) + pow(abs(Ay),2) + pow(abs(Az),2));
-    if (accTot > 0.9 && accTot < 1)
+    if (accTot > 0.9 && accTot < 1.1)
     {
         rollAcc = atan2(Ay, Az);
         pitchAcc = asin(-Ax/fabs(accTot));
@@ -91,13 +91,12 @@ void IMU::printValues(){
   Serial.print("Acc:\t");
   Serial.print("X= "); Serial.print(Ax);
   Serial.print("\tY= "); Serial.print(Ay);
-  Serial.print("\tZ= "); Serial.println(Az);
+  Serial.print("\tZ= "); Serial.print(Az);
   //equation for temperature in degrees C from datasheet
-  Serial.print("Temperature: "); Serial.print(temperature); Serial.println(" °C ");
+  Serial.print("\tTemperature: "); Serial.print(temperature); Serial.print(" °C ");
 
-  Serial.print("Gyr:\t");
+  Serial.print("\tGyr:\t");
   Serial.print("X= "); Serial.print(Gx);
   Serial.print("\tY= "); Serial.print(Gy);
   Serial.print("\tZ= "); Serial.println(Gz);
-  Serial.println("****");
 }

@@ -15,9 +15,9 @@
 #define DEF_AXIS_MIN -126
 #define DEF_AXIS_MAX 127
 
-#define OFFSET_POWER    6
+#define OFFSET_POWER    15
 
-#define H_SLOW_POWER    15
+#define H_SLOW_POWER    20
 #define H_MEDIUM_POWER  50
 #define H_FAST_POWER    100
 
