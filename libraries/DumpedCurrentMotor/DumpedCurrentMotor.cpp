@@ -1,6 +1,7 @@
 #include "DumpedCurrentMotor.h"
 #include "Servo.h"
 #include "Arduino.h"
+#define vmap(x, i_min, i_max, o_min, o_max) (long) (x - i_min) * (o_max - o_min) / ( i_max - i_min ) + o_min
 
 
 /*
@@ -19,6 +20,8 @@ struct list_Motor
   list_Motor* s;
 };
 list_Motor* list = NULL;
+
+bool Motor::timer_setup = false;
 
 /**
  * set power function
@@ -44,6 +47,19 @@ void Motor::set_power(int powerPerc){
 void Motor::attach(int pin){
   if(pin<=0 || pin>MAX_PIN) return;
 
+  if(!Motor::timer_setup){
+    //Timer setup
+    cli();
+    TCCR2A = 0;                                    // set entire TCCR1A register to 0
+    TCCR2B = 0;                                    // same for TCCR1B
+    TCNT2  = 0;                                    // initialize counter value to 0
+    OCR2A  = 255;                                  // COMPARE REGISTER A = (16*10^6) / (1*1024) - 1 (must be <256 -> 8 bit)-------> [16*10^6/(prescale*desired frequncy)] -1
+    TCCR2B |= (1 << WGM22);                        // turn on CTC mode
+    TCCR2B |= (1 << CS22) | (1 << CS20);           // Set CS12 and CS10 bits for 1024 prescaler
+    TIMSK2 &= ~(1 << OCIE2A);
+    sei();
+    Motor::timer_setup = true;
+  }
   this->pin = pin;
   this->motor.attach(this->pin);
   this->motor.writeMicroseconds(SERVO_STOP_VALUE);
@@ -68,28 +84,19 @@ void Motor::detach(){
  */
 bool Motor::update()                    // update the current value by one step
 {
-  if (this->value < this->reach_value)
-   {
-      if (abs(this->value - this->reach_value) < this->step)
-      {
-        this->value = this->reach_value;
-      }
-      else
-      {
-        this->value += this->step;
-      }
-   }
-   else if (this->value > this->reach_value)
-   {
-      if (abs(this->value - this->reach_value) < this->step)
-      {
-        this->value = this->reach_value;
-      }
-      else
-      {
-        this->value -= this->step;
-      }
-   }
+  static int prev_offset = 0;
+  if (abs(this->value - this->reach_value) <= this->step)
+  {
+    this->value = this->reach_value;
+  }
+  else if (this->value < this->reach_value)
+  {
+    this->value += this->step;
+  }
+  else if (this->value > this->reach_value)
+  {
+    this->value -= this->step;
+  }
 
   this->motor.writeMicroseconds(this->value);
 
@@ -105,7 +112,7 @@ bool Motor::update()                    // update the current value by one step
 void Motor::set_offset_power(int powerPerc){
   int power = 0;
   if(powerPerc < 0) powerPerc = 0;
-  else if(powerPerc > 100) powerPerc = 100;
+  else if(powerPerc > MAX_OFFSET_PERC) powerPerc = MAX_OFFSET_PERC;
 
   power = powerPerc*MAX_POWER/100;
 
@@ -121,20 +128,9 @@ void Motor::set_offset_power(int powerPerc){
  */
 void Motor::set_offset(int offset)
 {
-  if (offset > input_maxval) offset = input_maxval;                        // saturation max value
-  else if (offset < input_minval) offset = input_minval;                   // stauration min value
-  this->offset = map(offset, input_minval, input_maxval, this->offset_minval, this->offset_maxval);
-
-  int new_reach_value = this->reach_value + this->offset;
-  if (new_reach_value > this->maxval) new_reach_value = this->maxval;
-  else if (new_reach_value < this->minval) new_reach_value = this->minval;
-  this->reach_value = new_reach_value;
-
-  int new_value = this->value + offset;
-  if(new_value > this->reach_value || new_value < this->reach_value) new_value = this->reach_value;
-  this->value = new_value;
-
-  this->motor.writeMicroseconds(this->value);
+  if (offset > input_maxval) this->offset = offset_maxval;                        // saturation max value
+  else if (offset < input_minval) this->offset = offset_minval;                   // stauration min value
+  else this->offset = vmap(offset, input_minval, input_maxval, offset_minval, offset_maxval);
 }
 
 
@@ -146,15 +142,14 @@ void Motor::set_offset(int offset)
  */
 void Motor::set_value(int val)                                       // set the new value of the current to reach and the step
 {
-  if (val > input_maxval) val = input_maxval;                        // saturation max value
-  else if (val < input_minval) val = input_minval;                   // stauration min value
-
-  this->reach_value = map(val, input_minval, input_maxval, this->minval, this->maxval) + this->offset;
+  if (val > input_maxval) this->reach_value = maxval;                        // saturation max value
+  else if (val < input_minval) this->reach_value = minval;                   // stauration min value
+  else 
+    this->reach_value = (long) (val - input_minval) * (maxval - minval) / (input_maxval - input_minval) + minval;
   
-  if(this->reach_value > this->maxval) this->reach_value = this->maxval;
-  else if(this->reach_value < this->minval) this->reach_value = this->minval;
+  this->reach_value += offset;
   
-  if (!this->update()){
+  if (!this->is_value_reached()){
     insert(this->code);
     TIMSK2 |= (1 << OCIE2A);
   }
@@ -172,20 +167,12 @@ Motor::Motor(int in_min, int in_max, int offsetPower, int startPowerPerc, int st
     : input_minval(in_min), input_maxval(in_max)
 {
   set_offset_power(offsetPower);
+  this->offset = 0;
   set_power(startPowerPerc);
 
   if(stepPerc < 0) stepPerc = 0;
   else if(stepPerc > 100) stepPerc = 100;
   step = (maxval - minval) * stepPerc / 100;
-
-  //Timer setup
-  cli();
-  TCCR2A = 0;                                    // set entire TCCR1A register to 0
-  TCCR2B = 0;                                    // same for TCCR1B
-  TCNT2  = 0;                                    // initialize counter value to 0
-  OCR2A  = 255;                                  // COMPARE REGISTER A = (16*10^6) / (1*1024) - 1 (must be <256 -> 8 bit)-------> [16*10^6/(prescale*desired frequncy)] -1
-  TCCR2B |= (1 << WGM22);                        // turn on CTC mode
-  TCCR2B |= (1 << CS22) | (1 << CS20);           // Set CS12 and CS10 bits for 1024 prescaler
 
   //functional values setup
   this->value       = SERVO_STOP_VALUE;
@@ -196,7 +183,6 @@ Motor::Motor(int in_min, int in_max, int offsetPower, int startPowerPerc, int st
   this->code        = i;
   vect[i] = this;
   i++;
-  sei();
 }
 
 /** getters **/

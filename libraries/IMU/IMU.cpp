@@ -36,13 +36,13 @@ void IMU::complementaryFilter(){
     sp=sin(pitch);
 
     roll=atan2(cdr*(sdy*sp + cdy*cp*sr) - sdr*(sdp*(cdy*sp - cp*sdy*sr) - cdp*cp*cr), - sdr*(sdy*sp + cdy*cp*sr) - cdr*(sdp*(cdy*sp - cp*sdy*sr) - cdp*cp*cr));
-    pitch=atan2(cdp*(cdy*sp - cp*sdy*sr) + cp*cr*sdp, sqrt(pow(cdr*(sdy*sp + cdy*cp*sr) - sdr*(sdp*(cdy*sp - cp*sdy*sr) - cdp*cp*cr),2)+pow(- sdr*(sdy*sp + cdy*cp*sr) - cdr*(sdp*(cdy*sp - cp*sdy*sr) - cdp*cp*cr),2)));
+    pitch=atan2(cdp*(cdy*sp - cp*sdy*sr) + cp*cr*sdp, sqrt( abs( pow(cdr*(sdy*sp + cdy*cp*sr) - sdr*(sdp*(cdy*sp - cp*sdy*sr) - cdp*cp*cr),2)+pow(- sdr*(sdy*sp + cdy*cp*sr) - cdr*(sdp*(cdy*sp - cp*sdy*sr) - cdp*cp*cr),2) ) ) );
  
-    accTot = sqrt(pow(abs(Ax),2) + pow(abs(Ay),2) + pow(abs(Az),2));
+    accTot = sqrt( abs( pow(Ax,2) + pow(Ay,2) + pow(Az,2) ) );
     if (accTot > 0.9 && accTot < 1.1)
     {
         rollAcc = atan2(Ay, Az);
-        pitchAcc = asin(-Ax/fabs(accTot));
+        pitchAcc = asin(-Ax / accTot);
 
         roll = roll * 0.8 + rollAcc * 0.2;
         pitch = pitch * 0.8 + pitchAcc * 0.2;   
@@ -77,9 +77,9 @@ void IMU::imuRead(){
   Az = (Az - 1660.462)  / 17123.54;
 
   // Convert the data
-  Gx = -(Gx - 349.262)/2500;
-  Gy = -(Gy - 154.551)/2500;
-  Gz = (Gz + 176.136)/2500;
+  Gx = -(Gx - 349.262) / 2500;
+  Gy = -(Gy - 154.551) / 2500;
+  Gz = (Gz + 176.136) / 2500;
   
   complementaryFilter(); //call calculation function
 }

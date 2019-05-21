@@ -6,9 +6,9 @@
 #define MAX_POWER         400
 
 //useful constants
+#define MAX_OFFSET_PERC   15
 #define DEF_POWER_PERC    30
 #define DEF_STEP_PERC     1                                         // default percentage of the step
-#define DEFAULT_MAX_PERC  30                                        // default max for the percentage for the step          
 #define DEFAULT_MAX_VAL   1700					 	                    // default max value for the actual value
 #define DEFAULT_MIN_VAL   1300                                      // default min value for the actual value
 #define DEFAULT_INT_VAL   15624                                     // default value for compare register  
@@ -31,8 +31,8 @@ class Motor {
       volatile int step;						                  // step of the DumpedCurrentMotor
       volatile int code;                                    // univoque value of the motor
       volatile Servo motor;                                 // Servo instance
+      volatile int offset;                                  // offset value
       int pin;                                              // pin where the motor is attached to
-      int offset;                                           // offset value
       int maxval;                                           // maximum value of the DumpedCurrentMotor
       int minval;                                           // minimum value of the DumpedCurrentMotor
       int input_minval;                                     // minimum value of the input power
@@ -41,6 +41,7 @@ class Motor {
       int offset_maxval;                                    // maximum value of the offset
 
    public:
+      static bool timer_setup;
       Motor(int in_min, int in_max, int offsetPower = 0, int startPowerPerc = DEF_POWER_PERC, int stepPerc = DEF_STEP_PERC);
       
       void set_offset_power(int powerPerc);

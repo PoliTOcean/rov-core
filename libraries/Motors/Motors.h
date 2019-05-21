@@ -21,8 +21,8 @@
 #define H_MEDIUM_POWER  50
 #define H_FAST_POWER    100
 
-#define V_SLOW_POWER    30
-#define V_MEDIUM_POWER  60
+#define V_SLOW_POWER    25
+#define V_MEDIUM_POWER  50
 #define V_FAST_POWER    100
 
 #define KP_roll   250

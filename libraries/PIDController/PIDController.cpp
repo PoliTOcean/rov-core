@@ -21,5 +21,9 @@ float PIDController::calculate_power(float current){
 
     prev = current;
 
-    return ( MAX > 0 && abs(power) > MAX ) ? MAX : power;
+    if(MAX > 0)
+      if(power > MAX) power = MAX;
+      else if(power < -MAX) power = -MAX;
+
+    return power;
 }

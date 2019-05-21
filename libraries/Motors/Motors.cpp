@@ -1,7 +1,6 @@
 #include "Arduino.h"
 #include "Motors.h"
 
-
 #define UR_pin  8
 #define UL_pin  7
 #define UB_pin  4
@@ -9,9 +8,6 @@
 #define FL_pin  6
 #define BR_pin  3
 #define BL_pin  2
-
-#define kDep  25
-
 
 
 void Motors::configure(){
@@ -93,6 +89,7 @@ void Motors::evaluateHorizontal() {
     return;
   }
   // I puntatori si riferiscono ai motori
+  int rz = this->rz * 0.7;
   FL.set_value(signFL * (-y+x+rz));
   FR.set_value(signFR * (-y-x-rz));
   BL.set_value(signBL * (-y-x+rz));
@@ -129,7 +126,7 @@ void Motors::goUpFast(){
 }
 
 void Motors::stopUpFast(){
-  up = 0.6;
+  up = 0;
 }
 
 void Motors::goDown(){
