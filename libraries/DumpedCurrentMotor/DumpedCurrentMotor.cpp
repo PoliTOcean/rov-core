@@ -85,18 +85,23 @@ void Motor::detach(){
 bool Motor::update()                    // update the current value by one step
 {
   static int prev_offset = 0;
-  if (abs(this->value - this->reach_value) <= this->step)
+
+  int current_offset = offset - prev_offset;
+
+  if (abs(this->value + current_offset - this->reach_value) <= this->step)
   {
     this->value = this->reach_value;
   }
   else if (this->value < this->reach_value)
   {
-    this->value += this->step;
+    this->value += this->step + current_offset;
   }
   else if (this->value > this->reach_value)
   {
-    this->value -= this->step;
+    this->value -= this->step + current_offset;
   }
+
+  prev_offset = offset;
 
   this->motor.writeMicroseconds(this->value);
 
