@@ -103,6 +103,9 @@ bool Motor::update()                    // update the current value by one step
 
   prev_offset = offset;
 
+  if (SERVO_STOP_THRESHOLD_MIN < this->value && this->value < SERVO_STOP_THRESHOLD_MAX)
+    this->value = SERVO_STOP_VALUE;
+
   this->motor.writeMicroseconds(this->value);
 
   return this->is_value_reached();

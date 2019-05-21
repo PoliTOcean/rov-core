@@ -4,16 +4,19 @@
 #define POLITOCEAN_LIMIT_CURRENT_H
 
 #define MAX_POWER         400
+#define SERVO_STOP_THRESHOLD        50
+#define MAX_OFFSET_PERC             15
 
 //useful constants
-#define MAX_OFFSET_PERC   15
-#define DEF_POWER_PERC    30
-#define DEF_STEP_PERC     1                                         // default percentage of the step
-#define DEFAULT_MAX_VAL   1700					 	                    // default max value for the actual value
-#define DEFAULT_MIN_VAL   1300                                      // default min value for the actual value
-#define DEFAULT_INT_VAL   15624                                     // default value for compare register  
-#define SERVO_STOP_VALUE  1500                                      // default servo stop value
-#define MAX_PIN           13                                        // max pin attachable to the motor
+#define DEF_POWER_PERC              30
+#define DEF_STEP_PERC               1                                         // default percentage of the step
+#define DEFAULT_MAX_VAL             1700					 	                     // default max value for the actual value
+#define DEFAULT_MIN_VAL             1300                                      // default min value for the actual value
+#define DEFAULT_INT_VAL             15624                                     // default value for compare register  
+#define SERVO_STOP_VALUE            1500                                      // default servo stop value
+#define SERVO_STOP_THRESHOLD_MIN    SERVO_STOP_VALUE - SERVO_STOP_THRESHOLD
+#define SERVO_STOP_THRESHOLD_MAX    SERVO_STOP_VALUE + SERVO_STOP_THRESHOLD
+#define MAX_PIN           13                                                  // max pin attachable to the motor
 
 //constant to define number of motors
 #define MOTORS_N          7
