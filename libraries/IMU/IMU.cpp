@@ -17,9 +17,9 @@ void IMU::complementaryFilter(){
     float accTot;
     
     // add real dt with micros
-    droll   = -Gx * IMU_dT;   // Angle around the X-axis (upside-down)
-    dpitch  = -Gy * IMU_dT;   // Angle around the Y-axis (upside-down)
-    dyaw    =  Gz * IMU_dT;   // Angle around the Z-axis
+    droll   = -Gx * dt;   // Angle around the X-axis (upside-down)
+    dpitch  = -Gy * dt;   // Angle around the Y-axis (upside-down)
+    dyaw    =  Gz * dt;   // Angle around the Z-axis
 
     cdr=cos(droll);
     cdp=cos(dpitch);
@@ -36,16 +36,16 @@ void IMU::complementaryFilter(){
     sp=sin(pitch);
 
     roll=atan2(cdr*(sdy*sp + cdy*cp*sr) - sdr*(sdp*(cdy*sp - cp*sdy*sr) - cdp*cp*cr), - sdr*(sdy*sp + cdy*cp*sr) - cdr*(sdp*(cdy*sp - cp*sdy*sr) - cdp*cp*cr));
-    pitch=atan2(cdp*(cdy*sp - cp*sdy*sr) + cp*cr*sdp, sqrt(pow(cdr*(sdy*sp + cdy*cp*sr) - sdr*(sdp*(cdy*sp - cp*sdy*sr) - cdp*cp*cr),2)+pow(- sdr*(sdy*sp + cdy*cp*sr) - cdr*(sdp*(cdy*sp - cp*sdy*sr) - cdp*cp*cr),2)));
+    pitch=atan2(cdp*(cdy*sp - cp*sdy*sr) + cp*cr*sdp, sqrt( abs( pow(cdr*(sdy*sp + cdy*cp*sr) - sdr*(sdp*(cdy*sp - cp*sdy*sr) - cdp*cp*cr),2)+pow(- sdr*(sdy*sp + cdy*cp*sr) - cdr*(sdp*(cdy*sp - cp*sdy*sr) - cdp*cp*cr),2) ) ) );
  
-    accTot = sqrt(pow(abs(Ax),2) + pow(abs(Ay),2) + pow(abs(Az),2));
-    if (accTot > 0.9 && accTot < 1)
+    accTot = sqrt( abs( pow(Ax,2) + pow(Ay,2) + pow(Az,2) ) );
+    if (accTot > 0.9 && accTot < 1.1)
     {
         rollAcc = atan2(Ay, Az);
-        pitchAcc = asin(-Ax/fabs(accTot));
+        pitchAcc = asin(-Ax / accTot);
 
-        roll = roll * 0.9 + rollAcc * 0.1;
-        pitch = pitch * 0.9 + pitchAcc * 0.1;   
+        roll = roll * 0.8 + rollAcc * 0.2;
+        pitch = pitch * 0.8 + pitchAcc * 0.2;   
     }
 }
 
@@ -77,9 +77,9 @@ void IMU::imuRead(){
   Az = (Az - 1660.462)  / 17123.54;
 
   // Convert the data
-  Gx = -(Gx - 349.262)/3000;
-  Gy = -(Gy - 154.551)/3000;
-  Gz = (Gz + 176.136)/3000;
+  Gx = -(Gx - 349.262) / 2500;
+  Gy = -(Gy - 154.551) / 2500;
+  Gz = (Gz + 176.136) / 2500;
   
   complementaryFilter(); //call calculation function
 }
@@ -91,13 +91,12 @@ void IMU::printValues(){
   Serial.print("Acc:\t");
   Serial.print("X= "); Serial.print(Ax);
   Serial.print("\tY= "); Serial.print(Ay);
-  Serial.print("\tZ= "); Serial.println(Az);
+  Serial.print("\tZ= "); Serial.print(Az);
   //equation for temperature in degrees C from datasheet
-  Serial.print("Temperature: "); Serial.print(temperature); Serial.println(" °C ");
+  Serial.print("\tTemperature: "); Serial.print(temperature); Serial.print(" °C ");
 
-  Serial.print("Gyr:\t");
+  Serial.print("\tGyr:\t");
   Serial.print("X= "); Serial.print(Gx);
   Serial.print("\tY= "); Serial.print(Gy);
   Serial.print("\tZ= "); Serial.println(Gz);
-  Serial.println("****");
 }
