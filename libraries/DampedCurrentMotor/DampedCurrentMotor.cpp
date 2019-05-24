@@ -1,27 +1,7 @@
-#include "DumpedCurrentMotor.h"
+#include "DampedCurrentMotor.h"
 #include "Servo.h"
 #include "Arduino.h"
 #define vmap(x, i_min, i_max, o_min, o_max) (long) (x - i_min) * (o_max - o_min) / ( i_max - i_min ) + o_min
-
-
-/*
- * in the vect vector are saved all the instances of the motor that will be create in the following way
- * Motor code    |   0    |   1    |   2    |   3    |   4    |   5    |   6   |
- * index vector  |   0    |   1    |   2    |   3    |   4    |   5    |   6   |
- */
-Motor* vect[MOTORS_N];
-int i = 0;
-
-// list management data and functions
-void insert(int);
-struct list_Motor
-{
-  int  p;
-  list_Motor* s;
-};
-list_Motor* list = NULL;
-
-bool Motor::timer_setup = false;
 
 /**
  * set power function
@@ -47,19 +27,6 @@ void Motor::set_power(int powerPerc){
 void Motor::attach(int pin){
   if(pin<=0 || pin>MAX_PIN) return;
 
-  if(!Motor::timer_setup){
-    //Timer setup
-    cli();
-    TCCR2A = 0;                                    // set entire TCCR1A register to 0
-    TCCR2B = 0;                                    // same for TCCR1B
-    TCNT2  = 0;                                    // initialize counter value to 0
-    OCR2A  = 255;                                  // COMPARE REGISTER A = (16*10^6) / (1*1024) - 1 (must be <256 -> 8 bit)-------> [16*10^6/(prescale*desired frequncy)] -1
-    TCCR2B |= (1 << WGM22);                        // turn on CTC mode
-    TCCR2B |= (1 << CS22) | (1 << CS20);           // Set CS12 and CS10 bits for 1024 prescaler
-    TIMSK2 &= ~(1 << OCIE2A);
-    sei();
-    Motor::timer_setup = true;
-  }
   this->pin = pin;
   this->motor.attach(this->pin);
   this->motor.writeMicroseconds(SERVO_STOP_VALUE);
@@ -69,12 +36,21 @@ void Motor::attach(int pin){
 /** detach the motor **/
 void Motor::detach(){
   this->pin   = -1;
-  this->value = SERVO_STOP_VALUE;
-  
-  this->motor.writeMicroseconds(SERVO_STOP_VALUE);
+  stop();
   this->motor.detach();
 }
 
+void Motor::stop(){
+  this->offset = 0;
+  this->reach_value = SERVO_STOP_VALUE;
+  this->value = this->reach_value;
+  this->motor.writeMicroseconds(this->value);
+}
+
+void Motor::write(){
+  this->value = this->reach_value;
+  this->motor.writeMicroseconds(this->value);
+}
 
 /** update function
  *
@@ -84,8 +60,6 @@ void Motor::detach(){
  */
 bool Motor::update()                    // update the current value by one step
 {
-  static int prev_offset = 0;
-
   int current_offset = offset - prev_offset;
 
   if (abs(this->value + current_offset - this->reach_value) <= this->step)
@@ -94,17 +68,14 @@ bool Motor::update()                    // update the current value by one step
   }
   else if (this->value < this->reach_value)
   {
-    this->value += this->step + current_offset;
+    this->value += this->step; //+ current_offset;
   }
   else if (this->value > this->reach_value)
   {
-    this->value -= this->step + current_offset;
+    this->value -= this->step;// + current_offset;
   }
 
-  prev_offset = offset;
-
-  if (SERVO_STOP_THRESHOLD_MIN < this->value && this->value < SERVO_STOP_THRESHOLD_MAX)
-    this->value = SERVO_STOP_VALUE;
+ // prev_offset = offset;
 
   this->motor.writeMicroseconds(this->value);
 
@@ -141,6 +112,10 @@ void Motor::set_offset(int offset)
   else this->offset = vmap(offset, input_minval, input_maxval, offset_minval, offset_maxval);
 }
 
+void Motor::set_and_update(int offset, int value){
+  set_offset(offset);
+  set_value(value, true);
+}
 
 /** Method to set the reach_value
  *
@@ -148,7 +123,7 @@ void Motor::set_offset(int offset)
  *
  *  @return void
  */
-void Motor::set_value(int val)                                       // set the new value of the current to reach and the step
+void Motor::set_value(int val, bool to_update)                                       // set the new value of the current to reach and the step
 {
   if (val > input_maxval) this->reach_value = maxval;                        // saturation max value
   else if (val < input_minval) this->reach_value = minval;                   // stauration min value
@@ -156,10 +131,10 @@ void Motor::set_value(int val)                                       // set the 
     this->reach_value = (long) (val - input_minval) * (maxval - minval) / (input_maxval - input_minval) + minval;
   
   this->reach_value += offset;
-  
-  if (!this->is_value_reached()){
-    insert(this->code);
-    TIMSK2 |= (1 << OCIE2A);
+
+  if(to_update)
+  {
+    update();
   }
 }
 
@@ -180,17 +155,12 @@ Motor::Motor(int in_min, int in_max, int offsetPower, int startPowerPerc, int st
 
   if(stepPerc < 0) stepPerc = 0;
   else if(stepPerc > 100) stepPerc = 100;
-  step = (maxval - minval) * stepPerc / 100;
+  step = MAX_POWER * stepPerc / 100;
 
   //functional values setup
   this->value       = SERVO_STOP_VALUE;
   this->reach_value = this->value;
   this->pin = -1;
-
-  //final motor setup
-  this->code        = i;
-  vect[i] = this;
-  i++;
 }
 
 /** getters **/
@@ -225,59 +195,4 @@ int Motor::get_step()
 int Motor::get_value()
 {
   return this->value;
-}
-
-int Motor::get_code()
-{
-  return this->code;
-}
-
-
-// ---------- Management of the list below: ----------
-/** Timer interrupt handler:
- *  Checks the list. If not empty, updates the value of the next motor.
- *  If it has not reached the value (if so, method 'update' returns true),
- *  push the motor into the list again.
- */
-ISR(TIMER2_COMPA_vect)
-{
-  //CHECK THE LIST
-  if (list != NULL)
-  {
-    list_Motor* app;
-    app         = list;
-    if (!vect[list->p]->update()) insert(list->p);
-    list        = app->s;
-    delete(app);
-  }
-  else
-  {
-      TIMSK2 &= (0 << OCIE2A);
-  }
-}
-
-/** insert motor into the list
- *
- *  @param code of the motor
- *
- *  @return void
- */
-void insert(int code)
-{
-  list_Motor* z;
-  if(list == NULL)
-  {
-    list = new(list_Motor);
-    list->p = code;
-    list->s = NULL;
-  }
-  else
-  {
-    z = list;
-    while(z->s != NULL) z = z->s;
-    z->s = new(list_Motor);
-    z = z->s;
-    z->p = code;
-    z->s = NULL;
-  }
 }
