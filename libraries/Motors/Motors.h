@@ -18,31 +18,28 @@
 #define OFFSET_POWER    40
 
 #define TIME_TO_REACH_MAX 3 //seconds
-#define DEF_TIME_TO_UPDATE_MS TIME_TO_REACH_MAX*H_POWER*10 // time*h_power_perc/100 * 1000
-#define H_POWER         1
-#define H_SLOW_POWER    20
-#define H_MEDIUM_POWER  50
+#define DEF_TIME_TO_UPDATE_MS TIME_TO_REACH_MAX*H_POWER_STEP*10 // time*h_power_perc/100 * 1000
+#define H_POWER_STEP    1
+#define H_SLOW_POWER    30
+#define H_MEDIUM_POWER  60
 #define H_FAST_POWER    100
 
-#define V_POWER         1
-#define V_SLOW_POWER    25
-#define V_MEDIUM_POWER  50
+#define V_POWER_STEP    1
+#define V_SLOW_POWER    40
+#define V_MEDIUM_POWER  60
 #define V_FAST_POWER    100
 
 #define KP_roll   400
 #define KI_roll   0
 #define KD_roll   0
-#define THRESHOLD_roll  0.03    // 1.4 degrees
 
 #define KP_pitch  400
 #define KI_pitch  0
 #define KD_pitch  0
-#define THRESHOLD_pitch 0.03    // 1.4 degrees
 
 #define KP_depth  30
 #define KI_depth  0
 #define KD_depth  0
-#define THRESHOLD_depth 0.1     // 1 cm
 
 
 class Motors {
@@ -93,16 +90,16 @@ class Motors {
             int time_to_update_ms = DEF_TIME_TO_UPDATE_MS)
     :  axis_min(axis_min),
        axis_max(axis_max),
-       FL(axis_min, axis_max, 0, 0, H_POWER),
-       FR(axis_min, axis_max, 0, 0, H_POWER),
-       BL(axis_min, axis_max, 0, 0, H_POWER),
-       BR(axis_min, axis_max, 0, 0, H_POWER),
-       UL(axis_min, axis_max, OFFSET_POWER, 0, V_POWER),
-       UR(axis_min, axis_max, OFFSET_POWER, 0, V_POWER),
-       UB(axis_min, axis_max, OFFSET_POWER, 0, V_POWER),
-       pitchCorrection(KP_pitch, KI_pitch, KD_pitch, dt, THRESHOLD_pitch, axis_max),
-       rollCorrection(KP_roll, KI_roll, KD_roll, dt, THRESHOLD_roll, axis_max),
-       depthCorrection(KP_depth, KI_depth, KD_depth, dt, THRESHOLD_depth, axis_max),
+       FL(axis_min, axis_max, 0, 0, H_POWER_STEP),
+       FR(axis_min, axis_max, 0, 0, H_POWER_STEP),
+       BL(axis_min, axis_max, 0, 0, H_POWER_STEP),
+       BR(axis_min, axis_max, 0, 0, H_POWER_STEP),
+       UL(axis_min, axis_max, OFFSET_POWER, 0, V_POWER_STEP),
+       UR(axis_min, axis_max, OFFSET_POWER, 0, V_POWER_STEP),
+       UB(axis_min, axis_max, OFFSET_POWER, 0, V_POWER_STEP),
+       pitchCorrection(KP_pitch, KI_pitch, KD_pitch, dt, axis_max),
+       rollCorrection(KP_roll, KI_roll, KD_roll, dt, axis_max),
+       depthCorrection(KP_depth, KI_depth, KD_depth, dt, axis_max),
        time_to_update((long)time_to_update_ms * 1000),
        last_update(0)
     {}

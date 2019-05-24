@@ -43,8 +43,8 @@ void Motors::evaluateVertical(int current_pressure, float roll, float pitch){
    }
 
    //call above functions for calculations
-   pitchPower = pitchCorrection.calculate_power(pitch);
-   rollPower  = rollCorrection.calculate_power(roll);
+   pitchPower = pitchCorrection.calculate_power(pitch, 0);
+   rollPower  = rollCorrection.calculate_power(roll, 0);
    
    //value for up-down movement
    int valUD=0, depthCorrectionPower=0;            //reset valUD
@@ -56,7 +56,7 @@ void Motors::evaluateVertical(int current_pressure, float roll, float pitch){
      savePressure = false;
    } //else, if it is not (still) pressing up/down buttons
    else //change value for autoquote
-     depthCorrectionPower = depthCorrection.calculate_power(current_pressure - requested_pressure);
+     depthCorrectionPower = depthCorrection.calculate_power(current_pressure, requested_pressure);
 /* DEBUG
    Serial.print("Pitch: ");
    Serial.print(pitch);
@@ -74,8 +74,8 @@ void Motors::evaluateVertical(int current_pressure, float roll, float pitch){
    Serial.println(depthCorrectionPower);
 */
    //adding values for UD movement/autoquote
-   UL.set_offset( depthCorrectionPower - pitchPower - rollPower );
-   UR.set_offset( depthCorrectionPower - pitchPower + rollPower );
+   UL.set_offset( depthCorrectionPower + pitchPower + rollPower );
+   UR.set_offset( depthCorrectionPower + pitchPower - rollPower );
    UB.set_offset( depthCorrectionPower + 2*pitchPower );
    UL.set_value(valUD, true);
    UR.set_value(valUD, true);

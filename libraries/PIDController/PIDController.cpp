@@ -1,23 +1,20 @@
 #include "PIDController.h"
 #define abs(a) (a<0?-a:a)
 
-float PIDController::calculate_power(float current){
+float PIDController::calculate_power(float currentValue, float desired){
     float der, power_p, power_d, power_i, power=0;
+    
+    float current = desired - currentValue; //current error
+   
+    power_p   = KP*current;
 
-    if ( abs(current) > threshold )
-    {        
-        power_p   = KP*current;
+    der       = (current-prev)/dt;
+    power_d   = KD*der;
 
-        der       = (current-prev)/dt;
-        power_d   = KD*der;
+    integ     = integ + dt*current;
+    power_i   = KI*integ;
 
-        integ     = integ + dt*current;
-        power_i   = KI*integ;
-
-        power     = power_p + power_d + power_i;
-    }
-    else
-      integ   = 0;
+    power     = power_p + power_d + power_i;
 
     prev = current;
 
