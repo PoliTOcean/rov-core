@@ -1,8 +1,8 @@
 #include "Arduino.h"
 #include "Motors.h"
 
-#define PERCENTAGE 0.8 // 20%
-#define PWR_THRESHOLD (AXES_MAX * 7) - 100
+#define PWR_CUT_PERC  0.65            // 65%
+#define PWR_THRESHOLD MAX_POWER*7*0.9 // 90% of total power
 
 #define UR_pin  8
 #define UL_pin  7
@@ -23,7 +23,7 @@ void Motors::configure(){
     BR.attach(BR_pin);
     BL.attach(BL_pin);
 
-    Motors::stop();       // do not run the motors untill `start()` is called
+    stop();                 // do not run the motors untill `start()` is called
     savePressure = false;
     setPower(power::SLOW);
 
@@ -57,7 +57,7 @@ void Motors::evaluateVertical(int current_pressure, float roll, float pitch){
    } //else, if it is not (still) pressing up/down buttons
    else //change value for autoquote
      depthCorrectionPower = depthCorrection.calculate_power(current_pressure - requested_pressure);
-/*
+/* DEBUG
    Serial.print("Pitch: ");
    Serial.print(pitch);
    Serial.print("\tRoll: ");
@@ -114,10 +114,10 @@ void Motors::evaluateHorizontal() {
 
   if(powerMode == power::FAST
     && getTotalPower() > PWR_THRESHOLD){
-      int new_BL = BL.get_value() * PERCENTAGE;
-      int new_BR = BR.get_value() * PERCENTAGE;
+      int new_BL = BL.get_value() * PWR_CUT_PERC;
+      int new_BR = BR.get_value() * PWR_CUT_PERC;
       BL.set_value(new_BL);
-      BR.set_value(new_BR));
+      BR.set_value(new_BR);
   }
 }
 
@@ -193,14 +193,13 @@ void Motors::setPower(power pwr){
 }
 
 int Motors::getTotalPower(){
-  int total;
+  int total = 0;
   total += FR.get_value();
   total += FL.get_value();
   total += BR.get_value();
   total += BL.get_value();
   total += UR.get_value();
   total += UL.get_value();
-  total += FB.get_value();
+  total += UB.get_value();
   return total;
-
 }

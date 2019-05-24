@@ -129,6 +129,8 @@ class Motors {
     void evaluateHorizontal();
 
     void writeMotors();
+
+    int getTotalPower();
 };
 
 
