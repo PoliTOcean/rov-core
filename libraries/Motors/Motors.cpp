@@ -33,9 +33,9 @@ void Motors::evaluateVertical(int current_pressure, float roll, float pitch){
 
    float pitchPower, rollPower;
    if(!started){
-     UR.set_value(0);
-     UL.set_value(0);
-     UB.set_value(0);
+     UR.stop();
+     UL.stop();
+     UB.stop();
      return;
    }
 
@@ -73,19 +73,29 @@ void Motors::evaluateVertical(int current_pressure, float roll, float pitch){
    //adding values for UD movement/autoquote
    UL.set_offset( depthCorrectionPower - pitchPower - rollPower );
    UR.set_offset( depthCorrectionPower - pitchPower + rollPower );
-   UB.set_offset( depthCorrectionPower + 1.8*pitchPower );
-   UL.set_value(valUD);
-   UR.set_value(valUD);
-   UB.set_value(valUD);
+   UB.set_offset( depthCorrectionPower + 2*pitchPower );
+   UL.set_value(valUD, true);
+   UR.set_value(valUD, true);
+   UB.set_value(valUD, true);
+}
+
+void Motors::writeMotors(){
+  UL.write();
+  UR.write();
+  UB.write();
+  FL.write();
+  FR.write();
+  BL.write();
+  BR.write();
 }
 
 /* function to evaluate powers for horizontal movement.*/
 void Motors::evaluateHorizontal() {
   if(!started){
-    FL.set_value(0);
-    FR.set_value(0);
-    BL.set_value(0);
-    BR.set_value(0);
+    FL.stop();
+    FR.stop();
+    BL.stop();
+    BR.stop();
     return;
   }
   // I puntatori si riferiscono ai motori
@@ -94,6 +104,14 @@ void Motors::evaluateHorizontal() {
   FR.set_value(signFR * (-y-x-rz));
   BL.set_value(signBL * (-y-x+rz));
   BR.set_value(signBR * (-y+x-rz));
+  if(micros() - last_update > time_to_update)
+  {
+    last_update = micros();
+    FL.update();
+    FR.update();
+    BL.update();
+    BR.update();
+  }
 }
 
 void Motors::start(int current_pressure){  
