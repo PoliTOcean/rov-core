@@ -14,7 +14,8 @@
 enum class sensor_t {
     ROLL,
     PITCH,
-    TEMPERATURE,
+    TEMPERATURE_INT,
+    TEMPERATURE_PWR,
     PRESSURE,
 
     First=ROLL,

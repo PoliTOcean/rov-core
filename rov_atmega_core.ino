@@ -1,61 +1,43 @@
-#include <RBD_Timer.h>  //library for custom timer
-#include <Array.h>
 #include <SPI.h>
 #include "IMU.h"
 #include "Sensor.h"
 #include "PressureSensor.h"
 #include "Motors.h"
 #include "Commands.h"
+#include "RBD_Timer.h"
 
 #define SENSORS_SIZE static_cast<int>(sensor_t::Last)+1
 
-RBD::Timer timer;         //needed for the IMU reading process: it tells us when a certain timeout is expired 
+#define dt 0.012    //12ms -> IMU needs to be calibrated with this dt
 
-volatile sensor_t s;  // sensor counter
-volatile Array<Sensor<byte>, SENSORS_SIZE> sensors; // array of sensors
-
-volatile bool updatedAxis = false;
-volatile byte c;
-volatile bool nextIsButton = false;
-volatile int receivedDataSelector = 0;
-
+volatile byte sensors[SENSORS_SIZE];
 volatile float currentPressure;
-
-volatile bool process = false;
-
 float temperature;
 
-IMU imu;  // imu sensor
-
+IMU imu(dt);  // imu sensor
 MS5837 brSensor;  // pressure sensor
-Motors motors;  // motors manager
+Motors motors(dt);  // motors manager
+RBD::Timer timer;
 
-using namespace Commands;
+using namespace Politocean::Constants::Commands;
 
-void setup() {
-   // analogReference(INTERNAL);
-    
+void setup() {    
     Serial.begin(9600);                   // initialize comunication via the serial port
-
-    /** SENSORS CONFIGURATION **/
-    for (auto sensor_type : sensor_t()) // create sensors array
-        sensors.push_back(Sensor<byte>(sensor_type, 0));
-    s = sensor_t::First;              // set the sensor counter
 
     imu.configure();                      // initialize IMU sensor
 
-    delay(1000);
+    delay(100);
     
     brSensor.setModel(MS5837::MS5837_02BA);
     brSensor.setFluidDensity(997);        // kg/m^3 (freshwater, 1029 for seawater)
     brSensor.init();                      // initialize pressure sensor
 
-    delay(1000);
+    delay(100);
 
     /** MOTORS INIT **/
-    motors.configure(imu);                // initialize motors
+    motors.configure();                   // initialize motors
     
-    delay(3000);                          // delay of 1 second to make actions complete
+    delay(1000);                          // delay of 1.5 seconds to make actions complete
 
     /** SPI SETUP **/
     cli();
@@ -65,10 +47,8 @@ void setup() {
     SPI.attachInterrupt();                // enable SPI
     sei();
 
-    timer.setTimeout(IMU_dT*1000);
+    timer.setTimeout(dt*1000);
     timer.restart();
-
-    Serial.println("Ciao...");
 }
 
 void sensorsRead(){
@@ -81,7 +61,7 @@ void sensorsRead(){
 
 void sensorsPrepare(){
 
-/*
+/* DEBUG
   Serial.print("Temperature: ");
   Serial.print(temperature);
   Serial.print(" °C (");
@@ -101,114 +81,137 @@ void sensorsPrepare(){
   Serial.print(" ° (");
   Serial.print((int)static_cast<byte>((int)imu.roll));
   Serial.println(")");*/
-  
-  sensors[static_cast<int>(sensor_t::TEMPERATURE)].setValue(static_cast<byte>(temperature));
-  sensors[static_cast<int>(sensor_t::PRESSURE)].setValue(static_cast<byte>(currentPressure-980));
-  sensors[static_cast<int>(sensor_t::PITCH)].setValue(static_cast<byte>(imu.pitch));
-  sensors[static_cast<int>(sensor_t::ROLL)].setValue(static_cast<byte>(imu.roll));
+
+  sensors[static_cast<int>(sensor_t::TEMPERATURE_PWR)]  = static_cast<byte>( temperature );
+  sensors[static_cast<int>(sensor_t::PRESSURE)]         = static_cast<byte>( currentPressure - 980 );
+  sensors[static_cast<int>(sensor_t::PITCH)]            = static_cast<byte>( ( imu.pitch + 3.15 )*10 );
+  sensors[static_cast<int>(sensor_t::ROLL)]             = static_cast<byte>( ( imu.roll + 3.15 )*10 );
+  sensors[static_cast<int>(sensor_t::TEMPERATURE_INT)]  = static_cast<byte>( imu.temperature );
 }
 
-void loop() {
-  // prepare data to send back via spi
- // unsigned long now = micros();
-
-  if(timer.isExpired()){
-    timer.restart();
-    
+void loop() { 
+  if( timer.onRestart() ){
+   //long now = micros();
     sensorsRead();
   
     sensorsPrepare();
     
-    if(updatedAxis){
-      motors.evaluateHorizontal();
-      updatedAxis=false;
-    }
-    motors.evaluateVertical(currentPressure);
+    motors.evaluateHorizontal();
+
+    //IMU's pitch is ROV's roll and viceversa
+    motors.evaluateVertical(currentPressure, imu.pitch, imu.roll);
+   // imu.printValues();
+   // Serial.println(micros()-now);
   }
-  //Serial.println((float)analogRead(A0) / (float)2.046);
- // now = micros()-now;
- // Serial.println((float)now/1000);
+  
 }
 
 ISR (SPI_STC_vect)
 {
     static Motors* motors_ = &motors;
+    static byte c;
+    static bool nextIsCommand = false, nextIsAxes = false, sensorsTerminator = false;
+    static int axis = 0;
+    static sensor_t s = sensor_t::First;  // sensor counter
     
     c = SPDR;
-    
-    // Prepare the next sensor's value to send through SPI
-    SPDR = sensors[static_cast<int>(s)].getValue();
-    
-    // if I sent the last sensor, reset current sensor to first one.
-    if (++s > sensor_t::Last)
+
+    // check data to send
+    if (sensorsTerminator)
+    {
+      SPDR = ATMega::SPI::Delims::SENSORS;
+      sensorsTerminator = false;
       s = sensor_t::First;
-    
-    process = true;
-    
-    if(c == 0x00){
+    }
+    else
+    {
+      // Prepare the next sensor's value to send through SPI
+      SPDR = sensors[ static_cast<int>( s ) ];
+      
+      // if I sent the last sensor, reset current sensor to first one.
+      if (s == sensor_t::Last)
+      {
+        sensorsTerminator = true;
+      }
+      else
+      {
+        ++s;
+      }
+    }
+
+    // check received data
+    if (c == ATMega::SPI::Delims::COMMAND)
+    {
       //the next incoming data is a button
-      nextIsButton=true;
-      reti();
+      nextIsCommand=true;
+      return;
+    }
+    else if (c == ATMega::SPI::Delims::AXES)
+    {
+      nextIsAxes = true;
+      return;
     }
     
 
-    if(nextIsButton){      
-      // process the nextIsButton
+    if(nextIsCommand){      
+      // process the nextIsCommand
       switch(c){
-        case Actions::START_AND_STOP:
+        case ATMega::SPI::START_AND_STOP:
           if (motors_->started)
             motors_->stop();
           else
             motors_->start(currentPressure);
         break;
-        case Actions::VDOWN_ON:
+        case ATMega::SPI::VDOWN_ON:
           motors_->goDown();
         break;
-        case Actions::VDOWN_OFF:
+        case ATMega::SPI::VDOWN_OFF:
           motors_->stopDown();
         break;
-        case Actions::VUP_ON:
+        case ATMega::SPI::VUP_ON:
           motors_->goUp();
         break;
-        case Actions::VUP_OFF:
+        case ATMega::SPI::VUP_OFF:
           motors_->stopUp();
         break;
-        case Actions::VUP_FAST_ON:
+        case ATMega::SPI::VUP_FAST_ON:
           motors_->goUpFast();
         break;
-        case Actions::VUP_FAST_OFF:
+        case ATMega::SPI::VUP_FAST_OFF:
           motors_->stopUpFast();
         break;
-        case Actions::FAST:
+        case ATMega::SPI::FAST:
           motors_->setPower(Motors::FAST);
         break;
-        case Actions::MEDIUM:
+        case ATMega::SPI::MEDIUM:
           motors_->setPower(Motors::MEDIUM);
         break;
-        case Actions::SLOW:
+        case ATMega::SPI::SLOW:
           motors_->setPower(Motors::SLOW);
         break;
        }
-      nextIsButton = false; // last command
-      receivedDataSelector = 0; // restart from x
-    }else{
-      switch(receivedDataSelector++){
-       case 0:         //  read x
-        motors_->setX(c);
+      nextIsCommand = false; // last command
+      axis = 0; // restart from x
+    }
+    else if (nextIsAxes)
+    {
+      switch(axis){
+       case ATMega::Axis::X_AXES:         //  read x
+        motors_->setX(c-127);
        break;
       
-       case 1:        // read y
-       motors_->setY(c);
+       case ATMega::Axis::Y_AXES:        // read y
+       motors_->setY(c-127);
        break;
       
-       case 2:        //  read rz
-       motors_->setRz(c);
+       case ATMega::Axis::RZ_AXES:       //  read rz
+       motors_->setRz(c-127);
        break;
       }
       
-      if (receivedDataSelector >= 3)
-        receivedDataSelector = 0;
-
-      updatedAxis = true;
+      if (++axis > 2){
+        nextIsAxes = false;
+        axis = 0;
+      }
     }
 }
