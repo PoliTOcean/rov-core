@@ -1,6 +1,9 @@
 #include "Arduino.h"
 #include "Motors.h"
 
+#define PWR_CUT_PERC  0.65            // 65%
+#define PWR_THRESHOLD MAX_POWER*7*0.9 // 90% of total power
+
 #define UR_pin  8
 #define UL_pin  7
 #define UB_pin  4
@@ -20,7 +23,7 @@ void Motors::configure(){
     BR.attach(BR_pin);
     BL.attach(BL_pin);
 
-    Motors::stop();       // do not run the motors untill `start()` is called
+    stop();                 // do not run the motors untill `start()` is called
     savePressure = false;
     setPower(power::SLOW);
 
@@ -54,7 +57,7 @@ void Motors::evaluateVertical(int current_pressure, float roll, float pitch){
    } //else, if it is not (still) pressing up/down buttons
    else //change value for autoquote
      depthCorrectionPower = depthCorrection.calculate_power(current_pressure - requested_pressure);
-/*
+/* DEBUG
    Serial.print("Pitch: ");
    Serial.print(pitch);
    Serial.print("\tRoll: ");
@@ -98,19 +101,23 @@ void Motors::evaluateHorizontal() {
     BR.stop();
     return;
   }
-  // I puntatori si riferiscono ai motori
+
   int rz = this->rz * 0.7;
   FL.set_value(signFL * (-y+x+rz));
   FR.set_value(signFR * (-y-x-rz));
   BL.set_value(signBL * (-y-x+rz));
   BR.set_value(signBR * (-y+x-rz));
-  if(micros() - last_update > time_to_update)
-  {
-    last_update = micros();
-    FL.update();
-    FR.update();
-    BL.update();
-    BR.update();
+
+  // if the rov request full power  for all its motors reduce the
+  // value of BL and BR in a certain percentage in order to 
+  // prevent ESC protection
+
+  if(powerMode == power::FAST
+    && getTotalPower() > PWR_THRESHOLD){
+      int new_BL = BL.get_value() * PWR_CUT_PERC;
+      int new_BR = BR.get_value() * PWR_CUT_PERC;
+      BL.set_value(new_BL);
+      BR.set_value(new_BR);
   }
 }
 
@@ -183,4 +190,16 @@ void Motors::setPower(power pwr){
   UB.set_power(perc);
 
   this->powerMode = pwr;
+}
+
+int Motors::getTotalPower(){
+  int total = 0;
+  total += FR.get_value();
+  total += FL.get_value();
+  total += BR.get_value();
+  total += BL.get_value();
+  total += UR.get_value();
+  total += UL.get_value();
+  total += UB.get_value();
+  return total;
 }
