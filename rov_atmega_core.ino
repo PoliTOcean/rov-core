@@ -8,24 +8,20 @@
 
 #define SENSORS_SIZE static_cast<int>(sensor_t::Last)+1
 
+#define dt 0.012    //12ms -> IMU needs to be calibrated with this dt
+
 volatile byte sensors[SENSORS_SIZE];
 volatile float currentPressure;
-volatile bool updatedAxis = false;
-
 float temperature;
 
-IMU imu;  // imu sensor
-
+IMU imu(dt);  // imu sensor
 MS5837 brSensor;  // pressure sensor
-Motors motors;  // motors manager
-
+Motors motors(dt);  // motors manager
 RBD::Timer timer;
 
-using namespace Commands;
+using namespace Politocean::Constants::Commands;
 
-void setup() {
-   // analogReference(INTERNAL);
-    
+void setup() {    
     Serial.begin(9600);                   // initialize comunication via the serial port
 
     imu.configure();                      // initialize IMU sensor
@@ -39,9 +35,9 @@ void setup() {
     delay(1000);
 
     /** MOTORS INIT **/
-    motors.configure();                // initialize motors
+    motors.configure();                   // initialize motors
     
-    delay(3000);                          // delay of 1 second to make actions complete
+    delay(3000);                          // delay of 1.5 seconds to make actions complete
 
     /** SPI SETUP **/
     cli();
@@ -51,7 +47,7 @@ void setup() {
     SPI.attachInterrupt();                // enable SPI
     sei();
 
-    timer.setTimeout(IMU_dT*1000);
+    timer.setTimeout(dt*1000);
     timer.restart();
 }
 
@@ -93,20 +89,19 @@ void sensorsPrepare(){
   sensors[static_cast<int>(sensor_t::TEMPERATURE_INT)]  = static_cast<byte>( imu.temperature );
 }
 
-void loop() {
-
-  if( timer.onRestart() ){    
+void loop() { 
+  if( timer.onRestart() ){
+   //long now = micros();
     sensorsRead();
   
     sensorsPrepare();
     
-    if(updatedAxis){
-      motors.evaluateHorizontal();
-      updatedAxis=false;
-    }
+    motors.evaluateHorizontal();
 
     //IMU's pitch is ROV's roll and viceversa
     motors.evaluateVertical(currentPressure, imu.pitch, imu.roll);
+   // imu.printValues();
+   // Serial.println(micros()-now);
   }
   
 }
@@ -124,7 +119,7 @@ ISR (SPI_STC_vect)
     // check data to send
     if (sensorsTerminator)
     {
-      SPDR = Spi::SENSORS_DELIM;
+      SPDR = ATMega::SPI::Delims::SENSORS;
       sensorsTerminator = false;
       s = sensor_t::First;
     }
@@ -145,13 +140,13 @@ ISR (SPI_STC_vect)
     }
 
     // check received data
-    if (c == Spi::COMMAND_DELIM)
+    if (c == ATMega::SPI::Delims::COMMAND)
     {
       //the next incoming data is a button
       nextIsCommand=true;
       return;
     }
-    else if (c == Spi::AXES_DELIM)
+    else if (c == ATMega::SPI::Delims::AXES)
     {
       nextIsAxes = true;
       return;
@@ -161,37 +156,37 @@ ISR (SPI_STC_vect)
     if(nextIsCommand){      
       // process the nextIsCommand
       switch(c){
-        case Actions::START_AND_STOP:
+        case ATMega::SPI::START_AND_STOP:
           if (motors_->started)
             motors_->stop();
           else
             motors_->start(currentPressure);
         break;
-        case Actions::VDOWN_ON:
+        case ATMega::SPI::VDOWN_ON:
           motors_->goDown();
         break;
-        case Actions::VDOWN_OFF:
+        case ATMega::SPI::VDOWN_OFF:
           motors_->stopDown();
         break;
-        case Actions::VUP_ON:
+        case ATMega::SPI::VUP_ON:
           motors_->goUp();
         break;
-        case Actions::VUP_OFF:
+        case ATMega::SPI::VUP_OFF:
           motors_->stopUp();
         break;
-        case Actions::VUP_FAST_ON:
+        case ATMega::SPI::VUP_FAST_ON:
           motors_->goUpFast();
         break;
-        case Actions::VUP_FAST_OFF:
+        case ATMega::SPI::VUP_FAST_OFF:
           motors_->stopUpFast();
         break;
-        case Actions::FAST:
+        case ATMega::SPI::FAST:
           motors_->setPower(Motors::FAST);
         break;
-        case Actions::MEDIUM:
+        case ATMega::SPI::MEDIUM:
           motors_->setPower(Motors::MEDIUM);
         break;
-        case Actions::SLOW:
+        case ATMega::SPI::SLOW:
           motors_->setPower(Motors::SLOW);
         break;
        }
@@ -201,16 +196,16 @@ ISR (SPI_STC_vect)
     else if (nextIsAxes)
     {
       switch(axis){
-       case 0:         //  read x
-        motors_->setX(c);
+       case ATMega::Axis::X_AXES:         //  read x
+        motors_->setX(c-127);
        break;
       
-       case 1:        // read y
-       motors_->setY(c);
+       case ATMega::Axis::Y_AXES:        // read y
+       motors_->setY(c-127);
        break;
       
-       case 2:        //  read rz
-       motors_->setRz(c);
+       case ATMega::Axis::RZ_AXES:       //  read rz
+       motors_->setRz(c-127);
        break;
       }
       
@@ -218,7 +213,5 @@ ISR (SPI_STC_vect)
         nextIsAxes = false;
         axis = 0;
       }
-
-      updatedAxis = true;
     }
 }

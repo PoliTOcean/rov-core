@@ -9,4 +9,4 @@ compile_commands.json
 CTestTestfile.cmake
 .vscode
 _libraries
-
+*.orig
