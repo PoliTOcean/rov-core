@@ -26,18 +26,18 @@ void setup() {
 
     imu.configure();                      // initialize IMU sensor
 
-    delay(1000);
+    delay(100);
     
     brSensor.setModel(MS5837::MS5837_02BA);
     brSensor.setFluidDensity(997);        // kg/m^3 (freshwater, 1029 for seawater)
     brSensor.init();                      // initialize pressure sensor
 
-    delay(1000);
+    delay(100);
 
     /** MOTORS INIT **/
     motors.configure();                   // initialize motors
     
-    delay(3000);                          // delay of 1.5 seconds to make actions complete
+    delay(1000);                          // delay of 1.5 seconds to make actions complete
 
     /** SPI SETUP **/
     cli();
