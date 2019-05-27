@@ -160,7 +160,7 @@ ISR (SPI_STC_vect)
           if (motors_->started)
             motors_->stop();
           else
-            motors_->start(currentPressure);
+            motors_->start();
         break;
         case ATMega::SPI::VDOWN_ON:
           motors_->goDown();

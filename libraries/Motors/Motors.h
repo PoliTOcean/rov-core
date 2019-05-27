@@ -11,11 +11,13 @@
 #include "PressureSensor.h"
 #include "IMU.h"
 #include "PIDController.h"
+#include "RBD_Timer.h"
 
 #define DEF_AXIS_MIN -126
 #define DEF_AXIS_MAX 127
 
-#define OFFSET_POWER    40
+#define V_OFFSET_POWER  40
+#define H_OFFSET_POWER  40
 
 #define TIME_TO_REACH_MAX 3 //seconds
 #define DEF_TIME_TO_UPDATE_MS TIME_TO_REACH_MAX*H_POWER_STEP*10 // time*h_power_perc/100 * 1000
@@ -29,17 +31,20 @@
 #define V_MEDIUM_POWER  60
 #define V_FAST_POWER    100
 
-#define KP_roll   400
+#define KP_roll   0
 #define KI_roll   0
 #define KD_roll   0
 
-#define KP_pitch  400
+#define KP_pitch  0
 #define KI_pitch  0
 #define KD_pitch  0
 
-#define KP_depth  30
-#define KI_depth  0
-#define KD_depth  0
+#define KU_depth  40
+#define PU_depth  3.31
+
+#define KP_depth  0.6*KU_depth //KU_depth/5
+#define KI_depth  2*KP_depth/PU_depth//0.2*KU_depth/PU_depth
+#define KD_depth  KP_depth*PU_depth/8//KU_depth*PU_depth / 15
 
 
 class Motors {
@@ -62,8 +67,8 @@ class Motors {
 
     volatile int x, y, rz;
     
-    bool savePressure;
-    volatile int requested_pressure;
+    volatile bool savePressure;
+    float requested_pressure;
     
     volatile float axis_min, axis_max;
 
@@ -71,7 +76,7 @@ class Motors {
 
     PIDController pitchCorrection, rollCorrection, depthCorrection;
     
-    long long time_to_update, last_update;
+    RBD::Timer timer;
 
   public:
     enum power {
@@ -90,23 +95,23 @@ class Motors {
             int time_to_update_ms = DEF_TIME_TO_UPDATE_MS)
     :  axis_min(axis_min),
        axis_max(axis_max),
-       FL(axis_min, axis_max, 0, 0, H_POWER_STEP),
-       FR(axis_min, axis_max, 0, 0, H_POWER_STEP),
-       BL(axis_min, axis_max, 0, 0, H_POWER_STEP),
-       BR(axis_min, axis_max, 0, 0, H_POWER_STEP),
-       UL(axis_min, axis_max, OFFSET_POWER, 0, V_POWER_STEP),
-       UR(axis_min, axis_max, OFFSET_POWER, 0, V_POWER_STEP),
-       UB(axis_min, axis_max, OFFSET_POWER, 0, V_POWER_STEP),
+       FL(axis_min, axis_max, H_OFFSET_POWER, 0, H_POWER_STEP),
+       FR(axis_min, axis_max, H_OFFSET_POWER, 0, H_POWER_STEP),
+       BL(axis_min, axis_max, H_OFFSET_POWER, 0, H_POWER_STEP),
+       BR(axis_min, axis_max, H_OFFSET_POWER, 0, H_POWER_STEP),
+       UL(axis_min, axis_max, V_OFFSET_POWER, 0, V_POWER_STEP),
+       UR(axis_min, axis_max, V_OFFSET_POWER, 0, V_POWER_STEP),
+       UB(axis_min, axis_max, V_OFFSET_POWER, 0, V_POWER_STEP),
        pitchCorrection(KP_pitch, KI_pitch, KD_pitch, dt, axis_max),
        rollCorrection(KP_roll, KI_roll, KD_roll, dt, axis_max),
-       depthCorrection(KP_depth, KI_depth, KD_depth, dt, axis_max),
-       time_to_update((long)time_to_update_ms * 1000),
-       last_update(0)
-    {}
+       depthCorrection(KP_depth, KI_depth, KD_depth, dt, axis_max)
+    {
+      timer.setTimeout(time_to_update_ms);
+    }
 
     void configure();
 
-    void start(int current_pressure);
+    void start();
     void stop();
 
     void setX(int x);
@@ -122,7 +127,7 @@ class Motors {
 
     void setPower(Motors::power pwr);
     
-    void evaluateVertical(int current_pressure, float roll, float pitch);
+    void evaluateVertical(float current_pressure, float roll, float pitch);
     void evaluateHorizontal();
 
     void writeMotors();

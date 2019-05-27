@@ -4,7 +4,7 @@
 float PIDController::calculate_power(float currentValue, float desired){
     float der, power_p, power_d, power_i, power=0;
     
-    float current = desired - currentValue; //current error
+    float current = desired -  currentValue; //current error
    
     power_p   = KP*current;
 
