@@ -62,20 +62,23 @@ bool Motor::update()                    // update the current value by one step
 {
   int current_offset = offset - prev_offset;
 
-  if (abs(this->value + current_offset - this->reach_value) <= this->step)
+  if (   this->value + this->step + current_offset > this->reach_value
+      || this->value - this->step + current_offset < this->reach_value )
   {
     this->value = this->reach_value;
   }
   else if (this->value < this->reach_value)
   {
-    this->value += this->step; //+ current_offset;
+    this->value += this->step;
+    this->value += current_offset;
   }
   else if (this->value > this->reach_value)
   {
-    this->value -= this->step;// + current_offset;
+    this->value -= this->step;
+    this->value += current_offset;
   }
 
- // prev_offset = offset;
+  prev_offset = offset;
 
   this->motor.writeMicroseconds(this->value);
 
@@ -160,7 +163,7 @@ Motor::Motor(int in_min, int in_max, int offsetPower, int startPowerPerc, int st
   //functional values setup
   this->value       = SERVO_STOP_VALUE;
   this->reach_value = this->value;
-  this->pin = -1;
+  this->pin         = -1;
 }
 
 /** getters **/

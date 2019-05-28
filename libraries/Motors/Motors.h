@@ -17,9 +17,10 @@
 #define DEF_AXIS_MAX 127
 
 #define V_OFFSET_POWER  40
-#define H_OFFSET_POWER  40
+#define H_SLOW_OFFSET_POWER 20  //slow
+#define H_MF_OFFSET_POWER   30  //medium and fast
 
-#define TIME_TO_REACH_MAX 3 //seconds
+#define TIME_TO_REACH_MAX 1.5 //seconds
 #define DEF_TIME_TO_UPDATE_MS TIME_TO_REACH_MAX*H_POWER_STEP*10 // time*h_power_perc/100 * 1000
 #define H_POWER_STEP    1
 #define H_SLOW_POWER    30
@@ -42,9 +43,9 @@
 #define KU_depth  40
 #define PU_depth  3.31
 
-#define KP_depth  0.6*KU_depth //KU_depth/5
-#define KI_depth  2*KP_depth/PU_depth//0.2*KU_depth/PU_depth
-#define KD_depth  KP_depth*PU_depth/8//KU_depth*PU_depth / 15
+#define KP_depth  KU_depth/3              //0.6*KU_depth        //KU_depth/5              
+#define KI_depth  0.666*KU_depth/PU_depth //2*KP_depth/PU_depth //0.4*KU_depth/PU_depth   
+#define KD_depth  KU_depth*PU_depth/9     //KP_depth*PU_depth/8 //KU_depth*PU_depth/15    
 
 
 class Motors {
@@ -65,19 +66,23 @@ class Motors {
       V_SLOW_POWER, V_MEDIUM_POWER, V_FAST_POWER
     };
 
+    const float horizontalOffsetPowerPerc[3] = {
+      H_SLOW_OFFSET_POWER, H_MF_OFFSET_POWER, H_MF_OFFSET_POWER
+    };
+
     volatile int x, y, rz;
-    
     volatile bool savePressure;
+    bool countingTimeForPressure;
+    long long startTimeForPressure;
     float requested_pressure;
-    
     volatile float axis_min, axis_max;
-
     Motor FL, FR, BL, BR, UR, UL, UB;
-
     PIDController pitchCorrection, rollCorrection, depthCorrection;
-    
     RBD::Timer timer;
+    int prev_rz;
 
+    int calcRzOffsetPower(int prev_rz, int rz);
+    
   public:
     enum power {
       SLOW, MEDIUM, FAST
@@ -95,10 +100,10 @@ class Motors {
             int time_to_update_ms = DEF_TIME_TO_UPDATE_MS)
     :  axis_min(axis_min),
        axis_max(axis_max),
-       FL(axis_min, axis_max, H_OFFSET_POWER, 0, H_POWER_STEP),
-       FR(axis_min, axis_max, H_OFFSET_POWER, 0, H_POWER_STEP),
-       BL(axis_min, axis_max, H_OFFSET_POWER, 0, H_POWER_STEP),
-       BR(axis_min, axis_max, H_OFFSET_POWER, 0, H_POWER_STEP),
+       FL(axis_min, axis_max, H_SLOW_OFFSET_POWER, 0, H_POWER_STEP),
+       FR(axis_min, axis_max, H_SLOW_OFFSET_POWER, 0, H_POWER_STEP),
+       BL(axis_min, axis_max, H_SLOW_OFFSET_POWER, 0, H_POWER_STEP),
+       BR(axis_min, axis_max, H_SLOW_OFFSET_POWER, 0, H_POWER_STEP),
        UL(axis_min, axis_max, V_OFFSET_POWER, 0, V_POWER_STEP),
        UR(axis_min, axis_max, V_OFFSET_POWER, 0, V_POWER_STEP),
        UB(axis_min, axis_max, V_OFFSET_POWER, 0, V_POWER_STEP),

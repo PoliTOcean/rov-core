@@ -4,7 +4,8 @@
 #define PWR_CUT_PERC  0.6             // 65%
 #define PWR_THRESHOLD MAX_POWER*7*0.9 // 90% of total power
 
-#define PRESS_THRESHOLD 0.5
+#define PRESS_THRESHOLD       0.5
+#define PRESS_TIME_THRESHOLD  200000
 
 #define UR_pin  8
 #define UL_pin  7
@@ -34,8 +35,6 @@ void Motors::configure(){
 
 //function to evaluate vertical motors values
 void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
-   if(!configured) return;
-
    float pitchPower, rollPower;
    if(!started){
      UR.stop();
@@ -55,12 +54,30 @@ void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
      savePressure = true;                           //it has to save pressure when finished
      valUD = (up-down)*axis_max; //fixed value depending on buttons pressed
    }else if(savePressure){
-     UR.stop();
-     UL.stop();
-     UB.stop();
-     if( abs(requested_pressure - current_pressure) < PRESS_THRESHOLD )
-        savePressure = false;
-     requested_pressure = current_pressure;
+      if (!countingTimeForPressure)
+      {
+        UR.stop();
+        UL.stop();
+        UB.stop();
+        startTimeForPressure = micros();
+        countingTimeForPressure = true;
+      }
+      else if( abs(requested_pressure - current_pressure) < PRESS_THRESHOLD )
+      {
+        if ( (micros()-startTimeForPressure) > PRESS_TIME_THRESHOLD )
+        {
+          savePressure = false;
+        }
+        else
+        {
+          requested_pressure = current_pressure;
+        }
+      }
+      else
+      {
+        requested_pressure = current_pressure;
+        startTimeForPressure = micros();
+      }
    } //else, if it is not (still) pressing up/down buttons
    else //change value for autoquote
      depthCorrectionPower = -depthCorrection.calculate_power(current_pressure, requested_pressure);
@@ -109,15 +126,18 @@ void Motors::evaluateHorizontal() {
     return;
   }
 
-  FL.set_offset(signFL * rz);
+  int rz_offset_power = calcRzOffsetPower(prev_rz, rz);
+  FL.set_offset( signFL * rz);
   FR.set_offset(-signFR * rz);
-  BL.set_offset(signBL * rz);
+  BL.set_offset( signBL * rz);
   BR.set_offset(-signBR * rz);
-
-  FL.set_value(signFL * (-y+x));
-  FR.set_value(signFR * (-y-x));
-  int valueBL = signBL * (-y-x);
-  int valueBR = signBR * (-y+x);
+  
+  prev_rz = rz;
+  float rz_power_perc = horizontalOffsetPowerPerc[static_cast<int>(powerMode)] / horizontalPowerPerc[static_cast<int>(powerMode)];
+  FL.set_value( signFL * (-y+x + rz_power_perc*rz));
+  FR.set_value( signFR * (-y-x - rz_power_perc*rz));
+  int valueBL = signBL * (-y-x + rz_power_perc*rz);
+  int valueBR = signBR * (-y+x - rz_power_perc*rz);
   BL.set_value(valueBL);
   BR.set_value(valueBR);
 
@@ -139,9 +159,19 @@ void Motors::evaluateHorizontal() {
   }
 }
 
-void Motors::start(){  
-  started = true;
+int Motors::calcRzOffsetPower(int prev_rz, int rz)
+{
+  if( abs(rz) >= abs(prev_rz) )
+    return 0;
+  else if ( abs(prev_rz-rz) > abs(prev_rz) )
+    return -prev_rz;
+  else
+    return (rz>0) ? prev_rz-rz : rz-prev_rz;
+}
 
+void Motors::start(){
+  if(!configured) return;
+  started = true;
   savePressure = true;
 }
 
@@ -196,7 +226,12 @@ void Motors::setRz(int rz){
 
 void Motors::setPower(power pwr){
   int perc = horizontalPowerPerc[static_cast<int>(pwr)];
+  int percOffset = horizontalOffsetPowerPerc[static_cast<int>(pwr)];
 
+  FR.set_offset_power(percOffset);
+  FL.set_offset_power(percOffset);
+  BR.set_offset_power(percOffset);
+  BL.set_offset_power(percOffset);
   FR.set_power(perc);
   FL.set_power(perc);
   BR.set_power(perc);
