@@ -16,11 +16,11 @@
 #define DEF_AXIS_MIN -126
 #define DEF_AXIS_MAX 127
 
-#define V_OFFSET_POWER  40
+#define V_OFFSET_POWER      40
 #define H_SLOW_OFFSET_POWER 20  //slow
 #define H_MF_OFFSET_POWER   30  //medium and fast
 
-#define TIME_TO_REACH_MAX 1.5 //seconds
+#define TIME_TO_REACH_MAX 2.5 //seconds
 #define DEF_TIME_TO_UPDATE_MS TIME_TO_REACH_MAX*H_POWER_STEP*10 // time*h_power_perc/100 * 1000
 #define H_POWER_STEP    1
 #define H_SLOW_POWER    30
