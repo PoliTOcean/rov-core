@@ -4,8 +4,8 @@
 #define PWR_CUT_PERC  0.6             // 65%
 #define PWR_THRESHOLD MAX_POWER*7*0.9 // 90% of total power
 
-#define PRESS_THRESHOLD       0.5
-#define PRESS_TIME_THRESHOLD  200000
+#define PRESS_THRESHOLD         0.5
+#define PRESS_TIME_THRESHOLD    100000 //us
 
 #define UR_pin  8
 #define UL_pin  7
@@ -49,10 +49,10 @@ void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
    
    //value for up-down movement
    int valUD=0;
-   float depthCorrectionPower=0;            //reset valUD
-   if(down>0 || up>0){     //controlled up-down from joystick
-     savePressure = true;                           //it has to save pressure when finished
-     valUD = (up-down)*axis_max; //fixed value depending on buttons pressed
+   float depthCorrectionPower=0;
+   if(down>0 || up>0){            //controlled up-down from joystick
+     savePressure = true;         //it has to save pressure when finished
+     valUD = (up-down)*axis_max;  //fixed value depending on buttons pressed
    }else if(savePressure){
       if (!countingTimeForPressure)
       {
@@ -68,10 +68,6 @@ void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
         {
           savePressure = false;
         }
-        else
-        {
-          requested_pressure = current_pressure;
-        }
       }
       else
       {
@@ -81,22 +77,7 @@ void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
    } //else, if it is not (still) pressing up/down buttons
    else //change value for autoquote
      depthCorrectionPower = -depthCorrection.calculate_power(current_pressure, requested_pressure);
-/* DEBUG
-   Serial.print("Pitch: ");
-   Serial.print(pitch);
-   Serial.print("\tRoll: ");
-   Serial.print(roll);
-   Serial.print("\tPitch power: ");
-   Serial.print(pitchPower);
-   Serial.print("\tRoll power: ");
-   Serial.print(rollPower);
-   Serial.print("\tRequested pressure: ");
-   Serial.print(requested_pressure);
-   Serial.print("\tCurrent pressure: ");
-   Serial.print(current_pressure);
-   Serial.print("\tDepth correction power: ");
-   Serial.println(depthCorrectionPower);
-*/
+  
    //adding values for UD movement/autoquote
    UL.set_offset( depthCorrectionPower + pitchPower + rollPower );
    UR.set_offset( depthCorrectionPower + pitchPower - rollPower );
@@ -116,7 +97,6 @@ void Motors::writeMotors(){
   BR.write();
 }
 
-/* function to evaluate powers for horizontal movement.*/
 void Motors::evaluateHorizontal() {
   if(!started){
     FL.stop();
@@ -126,47 +106,32 @@ void Motors::evaluateHorizontal() {
     return;
   }
 
-  int rz_offset_power = calcRzOffsetPower(prev_rz, rz);
-  FL.set_offset( signFL * rz);
-  FR.set_offset(-signFR * rz);
-  BL.set_offset( signBL * rz);
-  BR.set_offset(-signBR * rz);
+  //rotation inibition
+  int rz = this->rz;
+  if (powerMode == MEDIUM)
+    rz = 0.6*rz;
+  else if (powerMode == FAST)
+    rz = 0.4*rz;
   
-  prev_rz = rz;
-  float rz_power_perc = horizontalOffsetPowerPerc[static_cast<int>(powerMode)] / horizontalPowerPerc[static_cast<int>(powerMode)];
-  FL.set_value( signFL * (-y+x + rz_power_perc*rz));
-  FR.set_value( signFR * (-y-x - rz_power_perc*rz));
-  int valueBL = signBL * (-y-x + rz_power_perc*rz);
-  int valueBR = signBR * (-y+x - rz_power_perc*rz);
-  BL.set_value(valueBL);
-  BR.set_value(valueBR);
+  // should we update?
+  bool updateNow = timer.onRestart();
+
+  // set values
+  FL.set_value( signFL * (-y + x + rz), updateNow);
+  FR.set_value( signFR * (-y - x - rz), updateNow);
+  int valueBL = signBL * (-y - x + rz);
+  int valueBR = signBR * (-y + x - rz);
+  BL.set_value(valueBL, updateNow);
+  BR.set_value(valueBR, updateNow);
 
   // if the rov request full power  for all its motors reduce the
   // value of BL and BR in a certain percentage in order to 
   // prevent 12V power protection
   if(powerMode == power::FAST
     && getTotalPower() > PWR_THRESHOLD){
-      BL.set_value(valueBL * PWR_CUT_PERC);
-      BR.set_value(valueBR * PWR_CUT_PERC);
+      BL.set_value(valueBL * PWR_CUT_PERC, true);
+      BR.set_value(valueBR * PWR_CUT_PERC, true);
   }
-
-  if(timer.onRestart())
-  {
-    FL.update();
-    FR.update();
-    BL.update();
-    BR.update();
-  }
-}
-
-int Motors::calcRzOffsetPower(int prev_rz, int rz)
-{
-  if( abs(rz) >= abs(prev_rz) )
-    return 0;
-  else if ( abs(prev_rz-rz) > abs(prev_rz) )
-    return -prev_rz;
-  else
-    return (rz>0) ? prev_rz-rz : rz-prev_rz;
 }
 
 void Motors::start(){

@@ -81,7 +81,7 @@ class Motors {
     RBD::Timer timer;
     int prev_rz;
 
-    int calcRzOffsetPower(int prev_rz, int rz);
+    //int calcRzOffsetPower(int prev_rz, int rz);
     
   public:
     enum power {

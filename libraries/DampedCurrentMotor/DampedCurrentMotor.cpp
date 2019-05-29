@@ -61,14 +61,21 @@ void Motor::write(){
 bool Motor::update()                    // update the current value by one step
 {
   int current_offset = offset - prev_offset;
+  int scaledValue = this->value - SERVO_STOP_VALUE, scaledReachValue = this->reach_value - SERVO_STOP_VALUE;
+  int absValue = abs(scaledValue), absReachValue = abs(scaledReachValue), absVariation = abs(scaledReachValue-scaledValue);
 
   if (   this->value + this->step + current_offset > this->reach_value
-      || this->value - this->step + current_offset < this->reach_value )
-  {
+      || this->value - this->step + current_offset < this->reach_value 
+      || absValue > absReachValue && absVariation <= absValue )
+  { // if its intensity is going to 0, or if the step is closer enough, then set to reach_value
     this->value = this->reach_value;
   }
+  else if ( absValue > absReachValue && absVariation > absValue )
+  { // if its intensity is going to 0, but reach_value has changed sign, then set to 0
+    this->value = SERVO_STOP_VALUE;
+  }
   else if (this->value < this->reach_value)
-  {
+  { // if intensity is growing up, approach to reach_value by one step
     this->value += this->step;
     this->value += current_offset;
   }
