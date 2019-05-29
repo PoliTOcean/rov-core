@@ -61,21 +61,31 @@ void Motor::write(){
 bool Motor::update()                    // update the current value by one step
 {
   int current_offset = offset - prev_offset;
-
-  if (abs(this->value + current_offset - this->reach_value) <= this->step)
-  {
+  
+  if (      this->value + this->step + current_offset > this->reach_value
+      ||    this->value - this->step + current_offset < this->reach_value 
+      ||  ( this->value < SERVO_STOP_VALUE && this->reach_value <= SERVO_STOP_VALUE && this->value < this->reach_value )
+      ||  ( this->value > SERVO_STOP_VALUE && this->reach_value >= SERVO_STOP_VALUE && this->value > this->reach_value ) )
+  { // if its intensity is going to 0, or if the step is closer enough, then set to reach_value
     this->value = this->reach_value;
   }
+  else if (  this->value < SERVO_STOP_VALUE && this->reach_value >= SERVO_STOP_VALUE
+          || this->value > SERVO_STOP_VALUE && this->reach_value <= SERVO_STOP_VALUE )
+  { // if its intensity is going to 0, but reach_value has changed sign, then set to 0
+    this->value = SERVO_STOP_VALUE;
+  }
   else if (this->value < this->reach_value)
-  {
-    this->value += this->step; //+ current_offset;
+  { // if intensity is growing up, approach to reach_value by one step
+    this->value += this->step;
+    this->value += current_offset;
   }
   else if (this->value > this->reach_value)
   {
-    this->value -= this->step;// + current_offset;
+    this->value -= this->step;
+    this->value += current_offset;
   }
 
- // prev_offset = offset;
+  prev_offset = offset;
 
   this->motor.writeMicroseconds(this->value);
 
@@ -107,8 +117,8 @@ void Motor::set_offset_power(int powerPerc){
  */
 void Motor::set_offset(int offset)
 {
-  if (offset > input_maxval) this->offset = offset_maxval;                        // saturation max value
-  else if (offset < input_minval) this->offset = offset_minval;                   // stauration min value
+  if (offset > input_maxval) this->offset = offset_maxval;       // saturation max value
+  else if (offset < input_minval) this->offset = offset_minval;  // stauration min value
   else this->offset = vmap(offset, input_minval, input_maxval, offset_minval, offset_maxval);
 }
 
@@ -130,7 +140,7 @@ void Motor::set_value(int val, bool to_update)                                  
   else 
     this->reach_value = (long) (val - input_minval) * (maxval - minval) / (input_maxval - input_minval) + minval;
   
-  this->reach_value += offset;
+    this->reach_value += offset;
 
   if(to_update)
   {
@@ -160,7 +170,7 @@ Motor::Motor(int in_min, int in_max, int offsetPower, int startPowerPerc, int st
   //functional values setup
   this->value       = SERVO_STOP_VALUE;
   this->reach_value = this->value;
-  this->pin = -1;
+  this->pin         = -1;
 }
 
 /** getters **/

@@ -1,7 +1,7 @@
 #include "PressureSensor.h"
 #include <Wire.h>
 
-#define MS5837_ADDR               0x76
+#define MS5837_ADDR               0x76  
 #define MS5837_RESET              0x1E
 #define MS5837_ADC_READ           0x00
 #define MS5837_PROM_READ          0xA0
@@ -14,6 +14,7 @@ const float MS5837::mbar = 1.0f;
 
 const uint8_t MS5837::MS5837_30BA = 0;
 const uint8_t MS5837::MS5837_02BA = 1;
+
 int Count = 0;
 unsigned long int Tmp = 0;
 
@@ -59,16 +60,19 @@ void MS5837::setFluidDensity(float density) {
 	fluidDensity = density;
 }
 
+
 void MS5837::read() {
 
-  bool proceed = false;
+	bool proceed = false;
   
-	if((micros() - Tmp) > 20000){
-    		Tmp=micros();
+	if ((micros() - Tmp) > 20000)
+	{
+		Tmp=micros();
 		proceed = true;
-  	}
+	}
 
-	if(Count==0 && proceed){
+	if (Count==0 && proceed)
+	{
 		Wire.beginTransmission(MS5837_ADDR);
 		Wire.write(MS5837_CONVERT_D1_8192);
 		Wire.endTransmission();
@@ -77,7 +81,8 @@ void MS5837::read() {
 
 	}
 
-	if(Count==1 && proceed){
+	if (Count==1 && proceed)
+	{
 		Wire.beginTransmission(MS5837_ADDR);
 		Wire.write(MS5837_ADC_READ);
 		Wire.endTransmission();
@@ -96,38 +101,38 @@ void MS5837::read() {
 		proceed = false;
 	}
 
-	if(Count==2 && proceed){
-	 Wire.beginTransmission(MS5837_ADDR);
-	 Wire.write(MS5837_ADC_READ);
-	 Wire.endTransmission();
+	if (Count==2 && proceed)
+	{
+		Wire.beginTransmission(MS5837_ADDR);
+		Wire.write(MS5837_ADC_READ);
+		Wire.endTransmission();
 
-	 Wire.requestFrom(MS5837_ADDR,3);
-	 D2 = 0;
-	 D2 = Wire.read();
-	 D2 = (D2 << 8) | Wire.read();
-	 D2 = (D2 << 8) | Wire.read();
+		Wire.requestFrom(MS5837_ADDR,3);
+		D2 = 0;
+		D2 = Wire.read();
+		D2 = (D2 << 8) | Wire.read();
+		D2 = (D2 << 8) | Wire.read();
 
-	 calculate();
-	 Count = 0;
-	 proceed = false;
-    }
-
+		calculate();
+		Count = 0;
+		proceed = false;
+	}
 
 }
 
 void MS5837::calculate() {
 	// Given C1-C6 and D1, D2, calculated TEMP and P
 	// Do conversion first and then second order temp compensation
-
+	
 	int32_t dT = 0;
 	int64_t SENS = 0;
 	int64_t OFF = 0;
 	int32_t SENSi = 0;
-	int32_t OFFi = 0;
-	int32_t Ti = 0;
+	int32_t OFFi = 0;  
+	int32_t Ti = 0;    
 	int64_t OFF2 = 0;
 	int64_t SENS2 = 0;
-
+	
 	// Terms called
 	dT = D2-uint32_t(C[5])*256l;
 	if ( _model == MS5837_02BA ) {
@@ -139,10 +144,10 @@ void MS5837::calculate() {
 		OFF = int64_t(C[2])*65536l+(int64_t(C[4])*dT)/128l;
 		P = (D1*SENS/(2097152l)-OFF)/(8192l);
 	}
-
+	
 	// Temp conversion
 	TEMP = 2000l+int64_t(dT)*C[6]/8388608LL;
-
+	
 	//Second order compensation
 	if ( _model == MS5837_02BA ) {
 		if((TEMP/100)<20){         //Low temp
@@ -166,21 +171,26 @@ void MS5837::calculate() {
 			SENSi = 0;
 		}
 	}
-
+	
 	OFF2 = OFF-OFFi;           //Calculate pressure and temp second order
 	SENS2 = SENS-SENSi;
-
+	
+	TEMP = (TEMP-Ti);
+	
 	if ( _model == MS5837_02BA ) {
-		TEMP = (TEMP-Ti);
-		P = (((D1*SENS2)/2097152l-OFF2)/32768l)/100;
+		P = (((D1*SENS2)/2097152l-OFF2)/32768l); 
 	} else {
-		TEMP = (TEMP-Ti);
-		P = (((D1*SENS2)/2097152l-OFF2)/8192l)/10;
+		P = (((D1*SENS2)/2097152l-OFF2)/8192l);
 	}
 }
 
 float MS5837::pressure(float conversion) {
-	return P*conversion;
+    if ( _model == MS5837_02BA ) {
+        return P*conversion/100.0f;
+    }
+    else {
+        return P*conversion/10.0f;
+    }
 }
 
 float MS5837::temperature() {
@@ -216,7 +226,7 @@ uint8_t MS5837::crc4(uint16_t n_prom[]) {
 			}
 		}
 	}
-
+	
 	n_rem = ((n_rem >> 12) & 0x000F);
 
 	return n_rem ^ 0x00;

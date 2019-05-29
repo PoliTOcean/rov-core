@@ -1,10 +1,10 @@
 /* Blue Robotics Arduino MS5837-30BA Pressure/Temperature Sensor Library
 ------------------------------------------------------------
-
+ 
 Title: Blue Robotics Arduino MS5837-30BA Pressure/Temperature Sensor Library
 
 Description: This library provides utilities to communicate with and to
-read data from the Measurement Specialties MS5837-30BA pressure/temperature
+read data from the Measurement Specialties MS5837-30BA pressure/temperature 
 sensor.
 
 Authors: Rustom Jehangir, Blue Robotics Inc.
@@ -32,7 +32,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
--------------------------------*/
+-------------------------------*/ 
 
 #ifndef MS5837_H_BLUEROBOTICS
 #define MS5837_H_BLUEROBOTICS
@@ -44,7 +44,7 @@ public:
 	static const float Pa;
 	static const float bar;
 	static const float mbar;
-    int Count;
+
 	static const uint8_t MS5837_30BA;
 	static const uint8_t MS5837_02BA;
 
@@ -57,7 +57,7 @@ public:
 	 */
 	void setModel(uint8_t model);
 
-	/** Provide the density of the working fluid in kg/m^3. Default is for
+	/** Provide the density of the working fluid in kg/m^3. Default is for 
 	 * seawater. Should be 997 for freshwater.
 	 */
 	void setFluidDensity(float density);
