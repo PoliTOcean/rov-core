@@ -1,8 +1,11 @@
 #include "Arduino.h"
 #include "Motors.h"
 
-#define PWR_CUT_PERC  0.65            // 65%
+#define PWR_CUT_PERC  0.6             // 65%
 #define PWR_THRESHOLD MAX_POWER*7*0.9 // 90% of total power
+
+#define PRESS_THRESHOLD         0.5
+#define PRESS_TIME_THRESHOLD    100000 //us
 
 #define UR_pin  8
 #define UL_pin  7
@@ -31,9 +34,7 @@ void Motors::configure(){
 }
 
 //function to evaluate vertical motors values
-void Motors::evaluateVertical(int current_pressure, float roll, float pitch){
-   if(!configured) return;
-
+void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
    float pitchPower, rollPower;
    if(!started){
      UR.stop();
@@ -43,39 +44,43 @@ void Motors::evaluateVertical(int current_pressure, float roll, float pitch){
    }
 
    //call above functions for calculations
-   pitchPower = pitchCorrection.calculate_power(pitch);
-   rollPower  = rollCorrection.calculate_power(roll);
+   pitchPower = 0;// pitchCorrection.calculate_power(pitch, 0);
+   rollPower  = 0;//rollCorrection.calculate_power(roll, 0);
    
    //value for up-down movement
-   int valUD=0, depthCorrectionPower=0;            //reset valUD
-   if(down>0 || up>0){     //controlled up-down from joystick
-     savePressure = true;                           //it has to save pressure when finished
-     valUD = (up-down)*axis_max; //fixed value depending on buttons pressed
+   int valUD=0;
+   float depthCorrectionPower=0;
+   if(down>0 || up>0){            //controlled up-down from joystick
+     savePressure = true;         //it has to save pressure when finished
+     valUD = (up-down)*axis_max;  //fixed value depending on buttons pressed
    }else if(savePressure){
-     requested_pressure = current_pressure;
-     savePressure = false;
+      if (!countingTimeForPressure)
+      {
+        UR.stop();
+        UL.stop();
+        UB.stop();
+        startTimeForPressure = micros();
+        countingTimeForPressure = true;
+      }
+      else if( abs(requested_pressure - current_pressure) < PRESS_THRESHOLD )
+      {
+        if ( (micros()-startTimeForPressure) > PRESS_TIME_THRESHOLD )
+        {
+          savePressure = false;
+        }
+      }
+      else
+      {
+        requested_pressure = current_pressure;
+        startTimeForPressure = micros();
+      }
    } //else, if it is not (still) pressing up/down buttons
    else //change value for autoquote
-     depthCorrectionPower = depthCorrection.calculate_power(current_pressure - requested_pressure);
-/* DEBUG
-   Serial.print("Pitch: ");
-   Serial.print(pitch);
-   Serial.print("\tRoll: ");
-   Serial.print(roll);
-   Serial.print("\tPitch power: ");
-   Serial.print(pitchPower);
-   Serial.print("\tRoll power: ");
-   Serial.print(rollPower);
-   Serial.print("\tRequested pressure: ");
-   Serial.print(requested_pressure);
-   Serial.print("\tCurrent pressure: ");
-   Serial.print(current_pressure);
-   Serial.print("\tDepth correction power: ");
-   Serial.println(depthCorrectionPower);
-*/
+     depthCorrectionPower = -depthCorrection.calculate_power(current_pressure, requested_pressure);
+  
    //adding values for UD movement/autoquote
-   UL.set_offset( depthCorrectionPower - pitchPower - rollPower );
-   UR.set_offset( depthCorrectionPower - pitchPower + rollPower );
+   UL.set_offset( depthCorrectionPower + pitchPower + rollPower );
+   UR.set_offset( depthCorrectionPower + pitchPower - rollPower );
    UB.set_offset( depthCorrectionPower + 2*pitchPower );
    UL.set_value(valUD, true);
    UR.set_value(valUD, true);
@@ -92,7 +97,6 @@ void Motors::writeMotors(){
   BR.write();
 }
 
-/* function to evaluate powers for horizontal movement.*/
 void Motors::evaluateHorizontal() {
   if(!started){
     FL.stop();
@@ -102,29 +106,38 @@ void Motors::evaluateHorizontal() {
     return;
   }
 
-  int rz = this->rz * 0.7;
-  FL.set_value(signFL * (-y+x+rz));
-  FR.set_value(signFR * (-y-x-rz));
-  BL.set_value(signBL * (-y-x+rz));
-  BR.set_value(signBR * (-y+x-rz));
+  //rotation inibition
+  int rz = this->rz;
+  if (powerMode == MEDIUM)
+    rz = 0.6*rz;
+  else if (powerMode == FAST)
+    rz = 0.4*rz;
+  
+  // should we update?
+  bool updateNow = timer.onRestart();
+
+  // set values
+  FL.set_value( signFL * (-y + x + rz), updateNow);
+  FR.set_value( signFR * (-y - x - rz), updateNow);
+  int valueBL = signBL * (-y - x + rz);
+  int valueBR = signBR * (-y + x - rz);
+  BL.set_value(valueBL, updateNow);
+  BR.set_value(valueBR, updateNow);
 
   // if the rov request full power  for all its motors reduce the
   // value of BL and BR in a certain percentage in order to 
-  // prevent ESC protection
-
+  // prevent 12V power protection
   if(powerMode == power::FAST
     && getTotalPower() > PWR_THRESHOLD){
-      int new_BL = BL.get_value() * PWR_CUT_PERC;
-      int new_BR = BR.get_value() * PWR_CUT_PERC;
-      BL.set_value(new_BL);
-      BR.set_value(new_BR);
+      BL.set_value(valueBL * PWR_CUT_PERC, true);
+      BR.set_value(valueBR * PWR_CUT_PERC, true);
   }
 }
 
-void Motors::start(int current_pressure){  
+void Motors::start(){
+  if(!configured) return;
   started = true;
-
-  requested_pressure = current_pressure;
+  savePressure = true;
 }
 
 void Motors::stop(){  
@@ -178,7 +191,6 @@ void Motors::setRz(int rz){
 
 void Motors::setPower(power pwr){
   int perc = horizontalPowerPerc[static_cast<int>(pwr)];
-
   FR.set_power(perc);
   FL.set_power(perc);
   BR.set_power(perc);
@@ -194,12 +206,12 @@ void Motors::setPower(power pwr){
 
 int Motors::getTotalPower(){
   int total = 0;
-  total += FR.get_value();
-  total += FL.get_value();
-  total += BR.get_value();
-  total += BL.get_value();
-  total += UR.get_value();
-  total += UL.get_value();
-  total += UB.get_value();
+  total += FR.get_value()-SERVO_STOP_VALUE;
+  total += FL.get_value()-SERVO_STOP_VALUE;
+  total += BR.get_value()-SERVO_STOP_VALUE;
+  total += BL.get_value()-SERVO_STOP_VALUE;
+  total += UR.get_value()-SERVO_STOP_VALUE;
+  total += UL.get_value()-SERVO_STOP_VALUE;
+  total += UB.get_value()-SERVO_STOP_VALUE;
   return total;
 }
