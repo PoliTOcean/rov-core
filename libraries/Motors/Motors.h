@@ -66,10 +66,6 @@ class Motors {
       V_SLOW_POWER, V_MEDIUM_POWER, V_FAST_POWER
     };
 
-    const float horizontalOffsetPowerPerc[3] = {
-      H_SLOW_OFFSET_POWER, H_MF_OFFSET_POWER, H_MF_OFFSET_POWER
-    };
-
     volatile int x, y, rz;
     volatile bool savePressure;
     bool countingTimeForPressure;
@@ -100,10 +96,10 @@ class Motors {
             int time_to_update_ms = DEF_TIME_TO_UPDATE_MS)
     :  axis_min(axis_min),
        axis_max(axis_max),
-       FL(axis_min, axis_max, H_SLOW_OFFSET_POWER, 0, H_POWER_STEP),
-       FR(axis_min, axis_max, H_SLOW_OFFSET_POWER, 0, H_POWER_STEP),
-       BL(axis_min, axis_max, H_SLOW_OFFSET_POWER, 0, H_POWER_STEP),
-       BR(axis_min, axis_max, H_SLOW_OFFSET_POWER, 0, H_POWER_STEP),
+       FL(axis_min, axis_max, 0, 0, H_POWER_STEP),
+       FR(axis_min, axis_max, 0, 0, H_POWER_STEP),
+       BL(axis_min, axis_max, 0, 0, H_POWER_STEP),
+       BR(axis_min, axis_max, 0, 0, H_POWER_STEP),
        UL(axis_min, axis_max, V_OFFSET_POWER, 0, V_POWER_STEP),
        UR(axis_min, axis_max, V_OFFSET_POWER, 0, V_POWER_STEP),
        UB(axis_min, axis_max, V_OFFSET_POWER, 0, V_POWER_STEP),

@@ -191,12 +191,6 @@ void Motors::setRz(int rz){
 
 void Motors::setPower(power pwr){
   int perc = horizontalPowerPerc[static_cast<int>(pwr)];
-  int percOffset = horizontalOffsetPowerPerc[static_cast<int>(pwr)];
-
-  FR.set_offset_power(percOffset);
-  FL.set_offset_power(percOffset);
-  BR.set_offset_power(percOffset);
-  BL.set_offset_power(percOffset);
   FR.set_power(perc);
   FL.set_power(perc);
   BR.set_power(perc);
