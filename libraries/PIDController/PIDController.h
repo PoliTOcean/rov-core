@@ -22,6 +22,7 @@ public:
         : KP(KP), KI(KI), KD(KD), dt(dt), MAX(MAX), prev(prev), integ(0) {}
 
     float calculate_power(float current, float desired);
+    void reset();
 
 };
 

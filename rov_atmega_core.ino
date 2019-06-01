@@ -60,28 +60,6 @@ void sensorsRead(){
 }
 
 void sensorsPrepare(){
-
-/* DEBUG
-  Serial.print("Temperature: ");
-  Serial.print(temperature);
-  Serial.print(" °C (");
-  Serial.print((int)static_cast<byte>((int)temperature));
-  Serial.print(")\tPressure: ");
-  Serial.print(brSensor.pressure());
-  Serial.print(" mBar (");
-  Serial.print((int)static_cast<byte>((int)brSensor.pressure()/10));
-  Serial.print(")  ");
-  Serial.print(brSensor.depth());
-  Serial.print(" m\tPitch: ");
-  Serial.print(imu.pitch);
-  Serial.print(" ° (");
-  Serial.print((int)static_cast<byte>((int)imu.pitch));
-  Serial.print(")\tRoll: ");
-  Serial.print(imu.roll);
-  Serial.print(" ° (");
-  Serial.print((int)static_cast<byte>((int)imu.roll));
-  Serial.println(")");*/
-
   sensors[static_cast<int>(sensor_t::TEMPERATURE_PWR)]  = static_cast<byte>( temperature );
   sensors[static_cast<int>(sensor_t::PRESSURE)]         = static_cast<byte>( currentPressure - 980 );
   sensors[static_cast<int>(sensor_t::PITCH)]            = static_cast<byte>( ( imu.pitch + 3.15 )*10 );

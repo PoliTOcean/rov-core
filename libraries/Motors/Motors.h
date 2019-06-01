@@ -16,36 +16,37 @@
 #define DEF_AXIS_MIN -126
 #define DEF_AXIS_MAX 127
 
-#define V_OFFSET_POWER      40
-#define H_SLOW_OFFSET_POWER 20  //slow
-#define H_MF_OFFSET_POWER   30  //medium and fast
+#define V_OFFSET_POWER  50
 
-#define TIME_TO_REACH_MAX 2.5 //seconds
+#define TIME_TO_REACH_MAX 3 //seconds
 #define DEF_TIME_TO_UPDATE_MS TIME_TO_REACH_MAX*H_POWER_STEP*10 // time*h_power_perc/100 * 1000
 #define H_POWER_STEP    1
 #define H_SLOW_POWER    30
-#define H_MEDIUM_POWER  60
-#define H_FAST_POWER    100
+#define H_MEDIUM_POWER  50
+#define H_FAST_POWER    90
 
 #define V_POWER_STEP    1
-#define V_SLOW_POWER    40
-#define V_MEDIUM_POWER  60
+#define V_SLOW_POWER    30
+#define V_MEDIUM_POWER  80
 #define V_FAST_POWER    100
 
-#define KP_roll   0
+#define KP_roll   100
 #define KI_roll   0
 #define KD_roll   0
 
-#define KP_pitch  0
-#define KI_pitch  0
-#define KD_pitch  0
+#define KU_pitch  150
+#define PU_pitch  1.403
 
-#define KU_depth  40
-#define PU_depth  3.31
+#define KP_pitch  0.2*KU_pitch //0.6*KU_pitch       
+#define KI_pitch  0.4*KP_pitch/PU_pitch//2*KP_pitch/PU_pitch
+#define KD_pitch  KU_pitch*PU_pitch/15//KP_pitch*PU_pitch/8
 
-#define KP_depth  KU_depth/3              //0.6*KU_depth        //KU_depth/5              
-#define KI_depth  0.666*KU_depth/PU_depth //2*KP_depth/PU_depth //0.4*KU_depth/PU_depth   
-#define KD_depth  KU_depth*PU_depth/9     //KP_depth*PU_depth/8 //KU_depth*PU_depth/15    
+#define KU_depth  100
+#define PU_depth  2.54
+
+#define KP_depth  0.6*KU_depth          
+#define KI_depth  2*KP_depth/PU_depth   
+#define KD_depth  KP_depth*PU_depth/8
 
 
 class Motors {
@@ -75,9 +76,7 @@ class Motors {
     Motor FL, FR, BL, BR, UR, UL, UB;
     PIDController pitchCorrection, rollCorrection, depthCorrection;
     RBD::Timer timer;
-    int prev_rz;
-
-    //int calcRzOffsetPower(int prev_rz, int rz);
+    int pressCount;
     
   public:
     enum power {
@@ -108,6 +107,7 @@ class Motors {
        depthCorrection(KP_depth, KI_depth, KD_depth, dt, axis_max)
     {
       timer.setTimeout(time_to_update_ms);
+      timer.restart();
     }
 
     void configure();

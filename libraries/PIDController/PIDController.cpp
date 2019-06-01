@@ -24,3 +24,8 @@ float PIDController::calculate_power(float currentValue, float desired){
 
     return power;
 }
+
+void PIDController::reset() {
+  integ = 0;
+  prev = 0;
+}
