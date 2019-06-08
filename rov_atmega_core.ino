@@ -12,9 +12,7 @@
 
 #define dt 0.012    //12ms -> IMU needs to be calibrated with this dt
 
-#define ONE_WIRE_BUS 2 // por
-
-OneWire oneWire(ONE_WIRE_BUS); //por
+OneWire oneWire(A1); //por
 
 DallasTemperature seno(&oneWire); //por
 long temperatureRequestTime;
