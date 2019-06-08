@@ -60,13 +60,13 @@ void setup() {
 
     seno.begin(); //porc
     seno.setWaitForConversion(false);
-    seno.requestTemperatures();
+    seno.requestTemperaturesByIndex(0);
 }
 
 void sensorsRead(){
   if(seno.isConversionComplete()){
-    temperature = seno.getTempCByIndex(0);
-    seno.requestTemperatures();
+    temperature = 5;//seno.getTempCByIndex(0);
+    seno.requestTemperaturesByIndex(0);
   }
   brSensor.read();
   currentPressure = brSensor.pressure();
