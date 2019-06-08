@@ -5,10 +5,18 @@
 #include "Motors.h"
 #include "Commands.h"
 #include "RBD_Timer.h"
+#include <OneWire.h> //porcata
+#include <DallasTemperature.h> // por
 
 #define SENSORS_SIZE static_cast<int>(sensor_t::Last)+1
 
 #define dt 0.012    //12ms -> IMU needs to be calibrated with this dt
+
+#define ONE_WIRE_BUS 2 // por
+
+OneWire oneWire(ONE_WIRE_BUS); //por
+
+DallasTemperature seno(&oneWire); //por
 
 volatile byte sensors[SENSORS_SIZE];
 volatile float currentPressure;
@@ -49,6 +57,8 @@ void setup() {
 
     timer.setTimeout(dt*1000);
     timer.restart();
+
+    seno.begin(); //porc
 }
 
 void sensorsRead(){
@@ -81,7 +91,7 @@ void loop() {
    // imu.printValues();
    // Serial.println(micros()-now);
   }
-  
+    temperature = seno.getResolution();
 }
 
 ISR (SPI_STC_vect)
