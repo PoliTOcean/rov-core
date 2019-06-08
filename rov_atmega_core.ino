@@ -17,6 +17,7 @@
 OneWire oneWire(ONE_WIRE_BUS); //por
 
 DallasTemperature seno(&oneWire); //por
+long temperatureRequestTime;
 
 volatile byte sensors[SENSORS_SIZE];
 volatile float currentPressure;
@@ -61,16 +62,16 @@ void setup() {
     seno.begin(); //porc
     seno.setWaitForConversion(false);
     seno.requestTemperaturesByIndex(0);
+    temperatureRequestTime = millis();
 }
 
 void sensorsRead(){
-
-  long time1 = millis();
-  temperature = seno.getTempCByIndex(0);
-  seno.requestTemperaturesByIndex(0);
-  long time2 = millis();
-  temperature = time2-time1;
-  
+  if ( (long)(millis()-temperatureRequestTime) > 100 )
+  {
+    temperature = seno.getTempCByIndex(0);
+    seno.requestTemperaturesByIndex(0);
+    temperatureRequestTime = millis();
+  }  
   brSensor.read();
   currentPressure = brSensor.pressure();
   imu.imuRead();
