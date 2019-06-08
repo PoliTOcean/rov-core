@@ -62,8 +62,8 @@ void sensorsRead(){
 void sensorsPrepare(){
   sensors[static_cast<int>(sensor_t::TEMPERATURE_PWR)]  = static_cast<byte>( temperature );
   sensors[static_cast<int>(sensor_t::PRESSURE)]         = static_cast<byte>( currentPressure - 980 );
-  sensors[static_cast<int>(sensor_t::PITCH)]            = static_cast<byte>( ( imu.pitch + 3.15 )*10 );
-  sensors[static_cast<int>(sensor_t::ROLL)]             = static_cast<byte>( ( imu.roll + 3.15 )*10 );
+  sensors[static_cast<int>(sensor_t::PITCH)]            = static_cast<byte>( ( imu.roll  + 3.15 )*10 );
+  sensors[static_cast<int>(sensor_t::ROLL)]             = static_cast<byte>( ( imu.pitch + 3.15 )*10 );
   sensors[static_cast<int>(sensor_t::TEMPERATURE_INT)]  = static_cast<byte>( imu.temperature );
 }
 
@@ -167,6 +167,12 @@ ISR (SPI_STC_vect)
         case ATMega::SPI::SLOW:
           motors_->setPower(Motors::SLOW);
         break;
+        case ATMega::SPI::PITCH_CONTROL:
+          if(motors_->pitchControlEnabled)
+            motors_->pitchControlOff();
+          else
+            motors_->pitchControlOn();
+        break;
        }
       nextIsCommand = false; // last command
       axis = 0; // restart from x
@@ -174,20 +180,24 @@ ISR (SPI_STC_vect)
     else if (nextIsAxes)
     {
       switch(axis){
-       case ATMega::Axis::X_AXES:         //  read x
+       case ATMega::Axes::X_AXIS:         //  read x
         motors_->setX(c-127);
        break;
       
-       case ATMega::Axis::Y_AXES:        // read y
+       case ATMega::Axes::Y_AXIS:        // read y
        motors_->setY(c-127);
        break;
       
-       case ATMega::Axis::RZ_AXES:       //  read rz
+       case ATMega::Axes::RZ_AXIS:       //  read rz
        motors_->setRz(c-127);
+       break;
+
+       case ATMega::Axes::PITCH_AXIS:
+       motors_->setPitchControlPower(c-127);
        break;
       }
       
-      if (++axis > 2){
+      if (++axis > 3){
         nextIsAxes = false;
         axis = 0;
       }

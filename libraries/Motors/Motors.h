@@ -16,7 +16,7 @@
 #define DEF_AXIS_MIN -126
 #define DEF_AXIS_MAX 127
 
-#define V_OFFSET_POWER  50
+#define V_OFFSET_POWER  80
 
 #define TIME_TO_REACH_MAX 3 //seconds
 #define DEF_TIME_TO_UPDATE_MS TIME_TO_REACH_MAX*H_POWER_STEP*10 // time*h_power_perc/100 * 1000
@@ -30,18 +30,18 @@
 #define V_MEDIUM_POWER  80
 #define V_FAST_POWER    100
 
-#define KP_roll   100
+#define KP_roll   60
 #define KI_roll   0
 #define KD_roll   0
 
-#define KU_pitch  150
-#define PU_pitch  1.403
+#define KU_pitch  90
+#define PU_pitch  1.57
 
-#define KP_pitch  0.2*KU_pitch //0.6*KU_pitch       
-#define KI_pitch  0.4*KP_pitch/PU_pitch//2*KP_pitch/PU_pitch
-#define KD_pitch  KU_pitch*PU_pitch/15//KP_pitch*PU_pitch/8
+#define KP_pitch  60  //0.2*KU_pitch          //0.6*KU_pitch        
+#define KI_pitch  0   //0.4*KU_pitch/PU_pitch //2*KP_pitch/PU_pitch   
+#define KD_pitch  0   //KU_pitch*PU_pitch/15  //KP_pitch*PU_pitch/8   
 
-#define KU_depth  100
+#define KU_depth  60
 #define PU_depth  2.54
 
 #define KP_depth  0.6*KU_depth          
@@ -67,9 +67,8 @@ class Motors {
       V_SLOW_POWER, V_MEDIUM_POWER, V_FAST_POWER
     };
 
-    volatile int x, y, rz;
+    volatile int x, y, rz, pitchControlPower;
     volatile bool savePressure;
-    bool countingTimeForPressure;
     long long startTimeForPressure;
     float requested_pressure;
     volatile float axis_min, axis_max;
@@ -83,7 +82,7 @@ class Motors {
       SLOW, MEDIUM, FAST
     };
 
-    volatile bool started;
+    volatile bool started, pitchControlEnabled;
     volatile float up, down;
     volatile Motors::power powerMode;
     bool configured = false;
@@ -104,7 +103,8 @@ class Motors {
        UB(axis_min, axis_max, V_OFFSET_POWER, 0, V_POWER_STEP),
        pitchCorrection(KP_pitch, KI_pitch, KD_pitch, dt, axis_max),
        rollCorrection(KP_roll, KI_roll, KD_roll, dt, axis_max),
-       depthCorrection(KP_depth, KI_depth, KD_depth, dt, axis_max)
+       depthCorrection(KP_depth, KI_depth, KD_depth, dt, axis_max),
+       pitchControlEnabled(false)
     {
       timer.setTimeout(time_to_update_ms);
       timer.restart();
@@ -118,7 +118,10 @@ class Motors {
     void setX(int x);
     void setY(int y);
     void setRz(int rz);
+    void setPitchControlPower(int pitchPower);
     
+    void pitchControlOn();
+    void pitchControlOff();
     void stopUp();
     void stopDown();
     void goUp();

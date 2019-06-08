@@ -29,6 +29,7 @@ void Motors::configure(){
 
     stop();                 // do not run the motors untill `start()` is called
     savePressure = false;
+    pitchControlOff();
     setPower(power::SLOW);
 
     configured = true;
@@ -44,9 +45,6 @@ void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
      return;
    }
 
-   //call above functions for calculations
-   pitchPower = pitchCorrection.calculate_power(pitch, 0);
-   rollPower  = rollCorrection.calculate_power(roll, 0);
    
    //value for up-down movement
    int valUD=0;
@@ -71,7 +69,18 @@ void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
       }
       depthCorrectionPower = -depthCorrection.calculate_power(current_pressure, requested_pressure);
    }
-  
+
+   if (pitchControlEnabled) {
+    pitchPower = pitchControlPower;
+    depthCorrectionPower = 0;
+    rollPower = 0;
+    depthCorrection.reset();
+    pitchCorrection.reset();
+   } else {
+    pitchPower = pitchCorrection.calculate_power(pitch, 0.02);
+    rollPower  = rollCorrection.calculate_power(roll, 0);
+   } 
+   
    //adding values for UD movement/autoquote
    UL.set_offset( depthCorrectionPower + pitchPower + rollPower );
    UR.set_offset( depthCorrectionPower + pitchPower - rollPower );
@@ -210,4 +219,16 @@ int Motors::getTotalPower(){
   total += UL.get_value()-SERVO_STOP_VALUE;
   total += UB.get_value()-SERVO_STOP_VALUE;
   return total;
+}
+
+void Motors::setPitchControlPower(int pitchPower) {
+  this->pitchControlPower = pitchPower;
+}
+
+void Motors::pitchControlOn() {
+  this->pitchControlEnabled = true;
+}
+
+void Motors::pitchControlOff() {
+  this->pitchControlEnabled = false;
 }

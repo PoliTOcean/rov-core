@@ -4,7 +4,7 @@
 #define POLITOCEAN_LIMIT_CURRENT_H
 
 #define MAX_POWER                   400
-#define MAX_OFFSET_PERC             50
+#define MAX_OFFSET_PERC             80
 
 //useful constants
 #define DEF_POWER_PERC              30
