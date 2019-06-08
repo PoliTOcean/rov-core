@@ -62,7 +62,7 @@ void setup() {
 }
 
 void sensorsRead(){
-  temperature = analogRead(A1)/2.046;
+ // temperature = analogRead(A1)/2.046;
   brSensor.read();
   currentPressure = brSensor.pressure();
   imu.imuRead();
