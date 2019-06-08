@@ -60,10 +60,14 @@ void setup() {
 
     seno.begin(); //porc
     seno.setWaitForConversion(false);
+    seno.requestTemperatures();
 }
 
 void sensorsRead(){
- // temperature = analogRead(A1)/2.046;
+  if(seno.isConversionComplete()){
+    temperature = seno.getTempCByIndex(0);
+    seno.requestTemperatures();
+  }
   brSensor.read();
   currentPressure = brSensor.pressure();
   imu.imuRead();
@@ -93,11 +97,6 @@ void loop() {
    // imu.printValues();
    // Serial.println(micros()-now);
   }
-    if(seno.isConversionComplete()){
-      temperature = seno.getTempCByIndex(0);
-      seno.requestTemperatures();
-    }
-    
     
 }
 
