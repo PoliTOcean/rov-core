@@ -1,11 +1,12 @@
 #include "Arduino.h"
 #include "Motors.h"
 
-#define PWR_CUT_PERC  0.6             // 65%
-#define PWR_THRESHOLD MAX_POWER*7*0.9 // 90% of total power
+#define PWR_CUT_PERC  0.4             // 40%
+#define PWR_THRESHOLD MAX_POWER*7*0.75 // 90% of total power
 
-#define PRESS_THRESHOLD         0.5
-#define PRESS_TIME_THRESHOLD    100000 //us
+#define N_PRESS_SAMPLES       5
+#define N_SECS                3
+#define PRESS_TIME_THRESHOLD  N_SECS*1000000/N_PRESS_SAMPLES //us
 
 #define UR_pin  8
 #define UL_pin  7
@@ -28,6 +29,7 @@ void Motors::configure(){
 
     stop();                 // do not run the motors untill `start()` is called
     savePressure = false;
+    pitchControlOff();
     setPower(power::SLOW);
 
     configured = true;
@@ -43,9 +45,6 @@ void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
      return;
    }
 
-   //call above functions for calculations
-   pitchPower = 0;// pitchCorrection.calculate_power(pitch, 0);
-   rollPower  = 0;//rollCorrection.calculate_power(roll, 0);
    
    //value for up-down movement
    int valUD=0;
@@ -53,35 +52,39 @@ void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
    if(down>0 || up>0){            //controlled up-down from joystick
      savePressure = true;         //it has to save pressure when finished
      valUD = (up-down)*axis_max;  //fixed value depending on buttons pressed
-   }else if(savePressure){
-      if (!countingTimeForPressure)
+   }
+   else
+   {
+      if (savePressure)
       {
-        UR.stop();
-        UL.stop();
-        UB.stop();
-        startTimeForPressure = micros();
-        countingTimeForPressure = true;
+        pressCount = 0;
+        savePressure = false;
       }
-      else if( abs(requested_pressure - current_pressure) < PRESS_THRESHOLD )
-      {
-        if ( (micros()-startTimeForPressure) > PRESS_TIME_THRESHOLD )
-        {
-          savePressure = false;
-        }
-      }
-      else
+      else if (pressCount < N_PRESS_SAMPLES && micros()-startTimeForPressure > (long) PRESS_TIME_THRESHOLD)
       {
         requested_pressure = current_pressure;
         startTimeForPressure = micros();
+        depthCorrection.reset();
+        pressCount++;
       }
-   } //else, if it is not (still) pressing up/down buttons
-   else //change value for autoquote
-     depthCorrectionPower = -depthCorrection.calculate_power(current_pressure, requested_pressure);
-  
+      depthCorrectionPower = -depthCorrection.calculate_power(current_pressure, requested_pressure);
+   }
+
+   if (pitchControlEnabled) {
+    pitchPower = pitchControlPower;
+    depthCorrectionPower = 0;
+    rollPower = 0;
+    depthCorrection.reset();
+    pitchCorrection.reset();
+   } else {
+    pitchPower = pitchCorrection.calculate_power(pitch, 0.02);
+    rollPower  = rollCorrection.calculate_power(roll, 0);
+   } 
+   
    //adding values for UD movement/autoquote
    UL.set_offset( depthCorrectionPower + pitchPower + rollPower );
    UR.set_offset( depthCorrectionPower + pitchPower - rollPower );
-   UB.set_offset( depthCorrectionPower + 2*pitchPower );
+   UB.set_offset( depthCorrectionPower - 2*pitchPower );
    UL.set_value(valUD, true);
    UR.set_value(valUD, true);
    UB.set_value(valUD, true);
@@ -108,10 +111,12 @@ void Motors::evaluateHorizontal() {
 
   //rotation inibition
   int rz = this->rz;
-  if (powerMode == MEDIUM)
-    rz = 0.6*rz;
-  else if (powerMode == FAST)
-    rz = 0.4*rz;
+  switch(powerMode)
+  {
+    case SLOW:    rz = 0.8*rz; break;
+    case MEDIUM:  rz = 0.6*rz; break;
+    case FAST:    rz = 0.4*rz; break;
+  }
   
   // should we update?
   bool updateNow = timer.onRestart();
@@ -214,4 +219,16 @@ int Motors::getTotalPower(){
   total += UL.get_value()-SERVO_STOP_VALUE;
   total += UB.get_value()-SERVO_STOP_VALUE;
   return total;
+}
+
+void Motors::setPitchControlPower(int pitchPower) {
+  this->pitchControlPower = pitchPower;
+}
+
+void Motors::pitchControlOn() {
+  this->pitchControlEnabled = true;
+}
+
+void Motors::pitchControlOff() {
+  this->pitchControlEnabled = false;
 }
