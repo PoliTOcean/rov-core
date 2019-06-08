@@ -59,6 +59,7 @@ void setup() {
     timer.restart();
 
     seno.begin(); //porc
+    seno.setWaitForConversion(false);
 }
 
 void sensorsRead(){
@@ -78,7 +79,8 @@ void sensorsPrepare(){
 }
 
 void loop() { 
-  if( timer.onRestart() ){
+  if( timer.onRestart() )
+  {
    //long now = micros();
     sensorsRead();
   
@@ -91,7 +93,12 @@ void loop() {
    // imu.printValues();
    // Serial.println(micros()-now);
   }
-    temperature = seno.getResolution();
+    if(seno.isConversionComplete()){
+      temperature = seno.getTempCByIndex(0);
+      seno.requestTemperatures();
+    }
+    
+    
 }
 
 ISR (SPI_STC_vect)
