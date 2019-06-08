@@ -64,10 +64,9 @@ void setup() {
 }
 
 void sensorsRead(){
-  if(seno.isConversionComplete()){
-    temperature = 5;//seno.getTempCByIndex(0);
+    temperature = seno.getTempCByIndex(0);
     seno.requestTemperaturesByIndex(0);
-  }
+  
   brSensor.read();
   currentPressure = brSensor.pressure();
   imu.imuRead();
