@@ -64,8 +64,12 @@ void setup() {
 }
 
 void sensorsRead(){
-    temperature = seno.getTempCByIndex(0);
-    seno.requestTemperaturesByIndex(0);
+
+  long time1 = millis();
+  temperature = seno.getTempCByIndex(0);
+  seno.requestTemperaturesByIndex(0);
+  long time2 = millis();
+  temperature = time2-time1;
   
   brSensor.read();
   currentPressure = brSensor.pressure();
