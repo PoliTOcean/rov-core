@@ -14,7 +14,6 @@
 
 OneWire oneWire(A1); //por
 DallasTemperature seno(&oneWire); //por
-long temperatureRequestTime;
 
 volatile byte sensors[SENSORS_SIZE];
 volatile float currentPressure;
