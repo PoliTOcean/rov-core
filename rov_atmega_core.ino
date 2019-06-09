@@ -13,7 +13,6 @@
 #define dt 0.012    //12ms -> IMU needs to be calibrated with this dt
 
 OneWire oneWire(A1); //por
-
 DallasTemperature seno(&oneWire); //por
 long temperatureRequestTime;
 
@@ -60,15 +59,13 @@ void setup() {
     seno.begin(); //porc
     seno.setWaitForConversion(false);
     seno.requestTemperaturesByIndex(0);
-    temperatureRequestTime = millis();
 }
 
 void sensorsRead(){
-  if ( (long)(millis()-temperatureRequestTime) > 100 )
+  if (seno.isConversionComplete())
   {
     temperature = seno.getTempCByIndex(0);
     seno.requestTemperaturesByIndex(0);
-    temperatureRequestTime = millis();
   }  
   brSensor.read();
   currentPressure = brSensor.pressure();
