@@ -16,6 +16,11 @@
 #define DEF_AXIS_MIN -126
 #define DEF_AXIS_MAX 127
 
+//value definition for the up and down axis
+#define VERTICAL_AXIS_MIN -32767
+#define VERTICAL_AXIS_MAX 32766  
+#define VERTICAL_AXIS_PROTECT 100
+
 #define V_OFFSET_POWER      40
 #define H_SLOW_OFFSET_POWER 20  //slow
 #define H_MF_OFFSET_POWER   30  //medium and fast
@@ -62,11 +67,13 @@ class Motors {
       H_SLOW_POWER, H_MEDIUM_POWER, H_FAST_POWER
     };
 
-    const float verticalPowerPerc[3] = {
-      V_SLOW_POWER, V_MEDIUM_POWER, V_FAST_POWER
-    };
+    //useless after the new feature
+    // const float verticalPowerPerc[3] = {
+    //   V_SLOW_POWER, V_MEDIUM_POWER, V_FAST_POWER
+    // };
 
     volatile int x, y, rz;
+    volatile int up,down;
     volatile bool savePressure;
     bool countingTimeForPressure;
     long long startTimeForPressure;
@@ -85,7 +92,7 @@ class Motors {
     };
 
     volatile bool started;
-    volatile float up, down;
+    //volatile float up, down;
     volatile Motors::power powerMode;
     bool configured = false;
     
@@ -119,12 +126,14 @@ class Motors {
     void setY(int y);
     void setRz(int rz);
     
-    void stopUp();
-    void stopDown();
-    void goUp();
-    void goDown();
-    void goUpFast();
-    void stopUpFast();
+    void setUP(int up);
+    void setDOWN(int down);
+    // void stopUp();
+    // void stopDown();
+    // void goUp();
+    // void goDown();
+    // void goUpFast();
+    // void stopUpFast();
 
     void setPower(Motors::power pwr);
     

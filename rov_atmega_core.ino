@@ -106,6 +106,7 @@ void loop() {
   
 }
 
+//it is the SPI interrupt service function
 ISR (SPI_STC_vect)
 {
     static Motors* motors_ = &motors;
@@ -162,24 +163,24 @@ ISR (SPI_STC_vect)
           else
             motors_->start();
         break;
-        case ATMega::SPI::VDOWN_ON:
-          motors_->goDown();
-        break;
-        case ATMega::SPI::VDOWN_OFF:
-          motors_->stopDown();
-        break;
-        case ATMega::SPI::VUP_ON:
-          motors_->goUp();
-        break;
-        case ATMega::SPI::VUP_OFF:
-          motors_->stopUp();
-        break;
-        case ATMega::SPI::VUP_FAST_ON:
-          motors_->goUpFast();
-        break;
-        case ATMega::SPI::VUP_FAST_OFF:
-          motors_->stopUpFast();
-        break;
+        // case ATMega::SPI::VDOWN_ON:
+        //   motors_->goDown();
+        // break;
+        // case ATMega::SPI::VDOWN_OFF:
+        //   motors_->stopDown();
+        // break;
+        // case ATMega::SPI::VUP_ON:
+        //   motors_->goUp();
+        // break;
+        // case ATMega::SPI::VUP_OFF:
+        //   motors_->stopUp();
+        // break;
+        // case ATMega::SPI::VUP_FAST_ON:
+        //   motors_->goUpFast();
+        // break;
+        // case ATMega::SPI::VUP_FAST_OFF:
+        //   motors_->stopUpFast();
+        // break;
         case ATMega::SPI::FAST:
           motors_->setPower(Motors::FAST);
         break;
@@ -206,6 +207,14 @@ ISR (SPI_STC_vect)
       
        case ATMega::Axis::RZ_AXES:       //  read rz
        motors_->setRz(c-127);
+       break;
+
+       case ATMega::Axis::UP_AXES:       //  read rz
+       motors_->setUP(c-127);
+       break;
+
+       case ATMega::Axis::DOWN_AXES:       //  read rz
+       motors_->setDOWN(c-127);
        break;
       }
       

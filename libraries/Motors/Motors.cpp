@@ -50,10 +50,17 @@ void Motors::evaluateVertical(float current_pressure, float roll, float pitch){
    //value for up-down movement
    int valUD=0;
    float depthCorrectionPower=0;
-   if(down>0 || up>0){            //controlled up-down from joystick
-     savePressure = true;         //it has to save pressure when finished
-     valUD = (up-down)*axis_max;  //fixed value depending on buttons pressed
-   }else if(savePressure){
+  //  if(down>0 || up>0){            //controlled up-down from joystick
+  //    savePressure = true;         //it has to save pressure when finished
+  //    valUD = (up-down)*axis_max;  //fixed value depending on buttons pressed
+  //  }//useless after new feature
+
+  if((up-VERTICAL_AXIS_MIN>VERTICAL_AXIS_PROTECT)||(down-VERTICAL_AXIS_MIN>VERTICAL_AXIS_PROTECT)){
+    //to compensate the "zero value" floating problem, make sure the movement can stop
+    savePressure = true;
+    valUD=((up-down)/(VERTICAL_AXIS_MAX-VERTICAL_AXIS_MIN))*axis_max;//mapping
+
+  }else if(savePressure){
       if (!countingTimeForPressure)
       {
         UR.stop();
@@ -147,29 +154,29 @@ void Motors::stop(){
   started = false;
 }
 
-void Motors::stopUp(){
-  up = 0;
-}
+// void Motors::stopUp(){
+//   up = 0;
+// }
 
-void Motors::stopDown(){
-  down = 0;
-}
+// void Motors::stopDown(){
+//   down = 0;
+// }
 
-void Motors::goUp(){
-  up = 0.6;
-}
+// void Motors::goUp(){
+//   up = 0.6;
+// }
 
-void Motors::goUpFast(){
-  up = 1;
-}
+// void Motors::goUpFast(){
+//   up = 1;
+// }
 
-void Motors::stopUpFast(){
-  up = 0;
-}
+// void Motors::stopUpFast(){
+//   up = 0;
+// }
 
-void Motors::goDown(){
-  down = 0.8;
-}
+// void Motors::goDown(){
+//   down = 0.8;
+// }
 
 void Motors::setX(int x){
   if (x < axis_min) x = axis_min;
@@ -187,6 +194,19 @@ void Motors::setRz(int rz){
   if (rz < axis_min) rz = axis_min;
   else if (rz > axis_max) rz = axis_max;
   this->rz = rz;
+}
+
+//to make sure the up and down value arrive the "evaluatevertical" is inside the value bound
+void Motors::setUP(int up){
+  if(up<VERTICAL_AXIS_MIN) up=VERTICAL_AXIS_MIN;
+  else if (up>VERTICAL_AXIS_MAX) up=VERTICAL_AXIS_MAX;
+  this->up = up;
+}
+
+void Motors::setDOWN(int down){
+  if(down<VERTICAL_AXIS_MIN) down=VERTICAL_AXIS_MIN;
+  else if (down>VERTICAL_AXIS_MAX) down=VERTICAL_AXIS_MAX;
+  this->down = down;
 }
 
 void Motors::setPower(power pwr){

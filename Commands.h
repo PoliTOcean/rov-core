@@ -13,9 +13,11 @@ namespace ATMega
 {
   namespace Axis
   {
-      const short X_AXES  = 0;
-      const short Y_AXES  = 1;
-      const short RZ_AXES = 2;
+      const short X_AXES    = 0;
+      const short Y_AXES    = 1;
+      const short RZ_AXES   = 2;
+      const short UP_AXES   = 3;//the number define here need to be confirmed!!
+      const short DOWN_AXES = 4;//the number define here need to be confirmed!!
   }
 
   namespace SPI
