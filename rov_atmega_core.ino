@@ -218,7 +218,7 @@ ISR (SPI_STC_vect)
        break;
       }
       
-      if (++axis > 2){
+      if (++axis > 4){
         nextIsAxes = false;
         axis = 0;
       }
