@@ -1,0 +1,24 @@
+{
+    "name": "Truster",
+    "keywords": "truster, motor, servo",
+    "description": "Arduino Library to manage current peaks of the motors",
+    "repository": {
+        "type": "git",
+        "url": ""
+    },
+    "authors": [{
+            "name": "Michele Salvatelli"
+        },
+        {
+            "name": "Roberto Stagi"
+        }
+    ],
+    "dependencies": {
+        "name": "Servo",
+        "authors": "Michael Margolis",
+        "frameworks": "arduino"
+    },
+    "version": "1.0.0",
+    "frameworks": "arduino",
+    "platforms": "*"
+}

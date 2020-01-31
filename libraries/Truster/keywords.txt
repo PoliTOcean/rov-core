@@ -1,0 +1,34 @@
+#######################################
+# Syntax Coloring Map For Truster
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+Truster		KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+attach          KEYWORD2
+detach          KEYWORD2
+write           KEYWORD2
+update          KEYWORD2
+stop            KEYWORD2
+isValueReached  KEYWORD2
+setValue        KEYWORD2
+setOffset       KEYWORD2
+setPower        KEYWORD2
+getPin          KEYWORD2
+getValue        KEYWORD2
+getMinVal       KEYWORD2
+getMaxVal       KEYWORD2
+getReachValue   KEYWORD2
+getOffset       KEYWORD2
+getStep         KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+

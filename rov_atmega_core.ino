@@ -4,16 +4,14 @@
 #include "PressureSensor.h"
 #include "Motors.h"
 #include "Commands.h"
-#include "RBD_Timer.h"
-#include <OneWire.h> //porcata
+#include <RBD_Timer.h>
 #include <DallasTemperature.h> // por
 
 #define SENSORS_SIZE static_cast<int>(sensor_t::Last)+1
 
 #define dt 0.012    //12ms -> IMU needs to be calibrated with this dt
 
-OneWire oneWire(A1); //por
-DallasTemperature seno(&oneWire); //por
+DallasTemperature seno(A1); //por
 
 volatile byte sensors[SENSORS_SIZE];
 volatile float currentPressure;
