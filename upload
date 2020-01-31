@@ -1,0 +1,13 @@
+#!/bin/bash
+
+sftp pi@10.0.0.2:/home/pi/test_scripts/firmware <<EOF
+put rov_atmega_core.ino.standard.hex
+exit
+EOF
+
+if [[ $? != 0 ]]; then
+    echo "Transfer failed!"
+    exit 1
+else
+    echo "Transfer complete."
+fi
