@@ -152,24 +152,6 @@ ISR(SPI_STC_vect)
             else
                 engine.start();
             break;
-        case ATMega::SPI::VDOWN_ON:
-            engine.goDown();
-            break;
-        case ATMega::SPI::VDOWN_OFF:
-            engine.stopDown();
-            break;
-        case ATMega::SPI::VUP_ON:
-            engine.goUp();
-            break;
-        case ATMega::SPI::VUP_OFF:
-            engine.stopUp();
-            break;
-        case ATMega::SPI::VUP_FAST_ON:
-            engine.goUpFast();
-            break;
-        case ATMega::SPI::VUP_FAST_OFF:
-            engine.stopUpFast();
-            break;
         case ATMega::SPI::FAST:
             engine.setPower(Engine::PowerMode::FAST);
             break;
@@ -205,12 +187,20 @@ ISR(SPI_STC_vect)
             engine.setYaw(c - 127);
             break;
 
+        case ATMega::Axes::UP_AXIS:
+            engine.setUp(c);
+            break;
+
+        case ATMega::Axes::DOWN_AXIS:
+            engine.setDown(c);
+            break;
+
         case ATMega::Axes::PITCH_AXIS:
             engine.setPitchControlPower(c - 127);
             break;
         }
 
-        if (++axis > 3)
+        if (++axis > 5)
         {
             nextIsAxes = false;
             axis = 0;
