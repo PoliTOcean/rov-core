@@ -12,6 +12,13 @@
 #include "PIDController.h"
 #include "RBD_Timer.h"
 
+/*
+#define DEF_AXIS_MIN_H -126
+#define DEF_AXIS_MAX_H 127
+#define DEF_AXIS_MIN_V 0
+#define DEF_AXIS_MAX_V 255
+*/
+
 #define DEF_AXIS_MIN -126
 #define DEF_AXIS_MAX 127
 
@@ -50,92 +57,75 @@
 class Motors
 {
 protected:
-  const int signFL = -1;
-  const int signFR = -1;
-  const int signBL = 1;
-  const int signBR = 1;
-  const int signUR = 1;
-  const int signUL = 1;
-  const int signUB = 1;
+    const int signFL = -1;
+    const int signFR = -1;
+    const int signBL = 1;
+    const int signBR = 1;
+    const int signUR = 1;
+    const int signUL = 1;
+    const int signUB = 1;
 
-  const float horizontalPowerPerc[3] = {
-      H_SLOW_POWER, H_MEDIUM_POWER, H_FAST_POWER};
+    const float horizontalPowerPerc[3] = {H_SLOW_POWER, H_MEDIUM_POWER, H_FAST_POWER};
+    const float verticalPowerPerc[3] = {V_SLOW_POWER, V_MEDIUM_POWER, V_FAST_POWER};
 
-  const float verticalPowerPerc[3] = {
-      V_SLOW_POWER, V_MEDIUM_POWER, V_FAST_POWER};
-
-  volatile int x, y, rz, pitchControlPower;
-  volatile bool savePressure;
-  long long startTimeForPressure;
-  float requested_pressure;
-  volatile float axis_min, axis_max;
-  Truster FL, FR, BL, BR, UR, UL, UB;
-  PIDController pitchCorrection, rollCorrection, depthCorrection;
-  RBD::Timer timer;
-  int pressCount;
+    volatile int x, y, rz, pitchControlPower;
+    volatile bool savePressure;
+    long long startTimeForPressure;
+    float requestedPressure;
+    volatile float axis_min, axis_max;
+    Truster frontLeftTruster,
+        frontRightTruster,
+        backLeftTruster,
+        backRightTruster,
+        upperRightTruster,
+        upperLeftTruster,
+        upperBackTruster;
+    PIDController pitchCorrection, rollCorrection, depthCorrection;
+    RBD::Timer timer;
+    int pressCount;
 
 public:
-  enum power
-  {
-    SLOW,
-    MEDIUM,
-    FAST
-  };
+    enum power
+    {
+        SLOW,
+        MEDIUM,
+        FAST
+    };
 
-  volatile bool started, pitchControlEnabled;
-  volatile float up, down;
-  volatile Motors::power powerMode;
-  bool configured = false;
+    volatile bool started, pitchControlEnabled;
+    volatile float up, down;
+    volatile Motors::power powerMode;
+    bool configured = false;
 
-  Motors(float dt,
-         float axis_min = DEF_AXIS_MIN,
-         float axis_max = DEF_AXIS_MAX,
-         int time_to_update_ms = DEF_TIME_TO_UPDATE_MS)
-      : axis_min(axis_min),
-        axis_max(axis_max),
-        FL(axis_min, axis_max, 0, 0, H_POWER_STEP),
-        FR(axis_min, axis_max, 0, 0, H_POWER_STEP),
-        BL(axis_min, axis_max, 0, 0, H_POWER_STEP),
-        BR(axis_min, axis_max, 0, 0, H_POWER_STEP),
-        UL(axis_min, axis_max, V_OFFSET_POWER, 0, V_POWER_STEP),
-        UR(axis_min, axis_max, V_OFFSET_POWER, 0, V_POWER_STEP),
-        UB(axis_min, axis_max, V_OFFSET_POWER, 0, V_POWER_STEP),
-        pitchCorrection(KP_pitch, KI_pitch, KD_pitch, dt, axis_max),
-        rollCorrection(KP_roll, KI_roll, KD_roll, dt, axis_max),
-        depthCorrection(KP_depth, KI_depth, KD_depth, dt, axis_max),
-        pitchControlEnabled(false)
-  {
-    timer.setTimeout(time_to_update_ms);
-    timer.restart();
-  }
+    Motors(float dt);
 
-  void configure();
+    void configure();
 
-  void start();
-  void stop();
+    void start();
+    void stop();
 
-  void setX(int x);
-  void setY(int y);
-  void setRz(int rz);
-  void setPitchControlPower(int pitchPower);
+    void setX(int x);
+    void setY(int y);
+    void setRz(int rz);
+    void setPitchControlPower(int pitchPower);
 
-  void pitchControlOn();
-  void pitchControlOff();
-  void stopUp();
-  void stopDown();
-  void goUp();
-  void goDown();
-  void goUpFast();
-  void stopUpFast();
+    void pitchControlOn();
+    void pitchControlOff();
+    void stopUp();
+    void stopDown();
+    void goUp();
+    void goDown();
+    void goUpFast();
+    void stopUpFast();
 
-  void setPower(Motors::power pwr);
+    void setPower(Motors::power pwr);
 
-  void evaluateVertical(float current_pressure, float roll, float pitch);
-  void evaluateHorizontal();
+    void evaluateVertical(float currentPressure, float roll, float pitch);
+    void evaluateHorizontal();
 
-  void writeMotors();
+    void writeMotors();
 
-  int getTotalPower();
+    int getTotalPower();
 };
 
 #endif
