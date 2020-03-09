@@ -31,16 +31,16 @@ const int signUpperBack = 1;
 } // namespace Signs
 
 Engine::Engine(float dt)
-    : frontLeftTruster(DEF_AXIS_MIN_H, DEF_AXIS_MAX_H, 0, 0, H_POWER_STEP),
-      frontRightTruster(DEF_AXIS_MIN_H, DEF_AXIS_MAX_H, 0, 0, H_POWER_STEP),
-      backLeftTruster(DEF_AXIS_MIN_H, DEF_AXIS_MAX_H, 0, 0, H_POWER_STEP),
-      backRightTruster(DEF_AXIS_MIN_H, DEF_AXIS_MAX_H, 0, 0, H_POWER_STEP),
-      upperLeftTruster(DEF_AXIS_MIN_V, DEF_AXIS_MAX_V, V_OFFSET_POWER, 0, V_POWER_STEP),
-      upperRightTruster(DEF_AXIS_MIN_V, DEF_AXIS_MAX_V, V_OFFSET_POWER, 0, V_POWER_STEP),
-      upperBackTruster(DEF_AXIS_MIN_V, DEF_AXIS_MAX_V, V_OFFSET_POWER, 0, V_POWER_STEP),
-      pitchCorrection(KP_pitch, KI_pitch, KD_pitch, dt, DEF_AXIS_MAX_H),
-      rollCorrection(KP_roll, KI_roll, KD_roll, dt, DEF_AXIS_MAX_H),
-      depthCorrection(KP_depth, KI_depth, KD_depth, dt, DEF_AXIS_MAX_H),
+    : frontLeftTruster(DEF_AXIS_MIN, DEF_AXIS_MAX, 0, 0, H_POWER_STEP),
+      frontRightTruster(DEF_AXIS_MIN, DEF_AXIS_MAX, 0, 0, H_POWER_STEP),
+      backLeftTruster(DEF_AXIS_MIN, DEF_AXIS_MAX, 0, 0, H_POWER_STEP),
+      backRightTruster(DEF_AXIS_MIN, DEF_AXIS_MAX, 0, 0, H_POWER_STEP),
+      upperLeftTruster(DEF_AXIS_MIN, DEF_AXIS_MAX, V_OFFSET_POWER, 0, V_POWER_STEP),
+      upperRightTruster(DEF_AXIS_MIN, DEF_AXIS_MAX, V_OFFSET_POWER, 0, V_POWER_STEP),
+      upperBackTruster(DEF_AXIS_MIN, DEF_AXIS_MAX, V_OFFSET_POWER, 0, V_POWER_STEP),
+      pitchCorrection(KP_pitch, KI_pitch, KD_pitch, dt, DEF_AXIS_MAX),
+      rollCorrection(KP_roll, KI_roll, KD_roll, dt, DEF_AXIS_MAX),
+      depthCorrection(KP_depth, KI_depth, KD_depth, dt, DEF_AXIS_MAX),
       pitchControlEnabled(false)
 {
     timer.setTimeout(DEF_TIME_TO_UPDATE_MS);
@@ -200,40 +200,40 @@ void Engine::stop()
 
 void Engine::setX(int x)
 {
-    if (x < DEF_AXIS_MIN_H)
-        this->x = DEF_AXIS_MIN_H;
-    else if (x > DEF_AXIS_MAX_H)
-        this->x = DEF_AXIS_MAX_H;
+    if (x < DEF_AXIS_MIN)
+        this->x = DEF_AXIS_MIN;
+    else if (x > DEF_AXIS_MAX)
+        this->x = DEF_AXIS_MAX;
     else
         this->x = x;
 }
 
 void Engine::setY(int y)
 {
-    if (y < DEF_AXIS_MIN_H)
-        this->y = DEF_AXIS_MIN_H;
-    else if (y > DEF_AXIS_MAX_H)
-        this->y = DEF_AXIS_MAX_H;
+    if (y < DEF_AXIS_MIN)
+        this->y = DEF_AXIS_MIN;
+    else if (y > DEF_AXIS_MAX)
+        this->y = DEF_AXIS_MAX;
     else
         this->y = y;
 }
 
 void Engine::setYaw(int yaw)
 {
-    if (yaw < DEF_AXIS_MIN_H)
-        this->yaw = DEF_AXIS_MIN_H;
-    else if (yaw > DEF_AXIS_MAX_H)
-        this->yaw = DEF_AXIS_MAX_H;
+    if (yaw < DEF_AXIS_MIN)
+        this->yaw = DEF_AXIS_MIN;
+    else if (yaw > DEF_AXIS_MAX)
+        this->yaw = DEF_AXIS_MAX;
     else
         this->yaw = yaw;
 }
 
 void Engine::setZ(int z)
 {
-    if (z < DEF_AXIS_MIN_V)
-        this->z = DEF_AXIS_MIN_V;
-    else if (z > DEF_AXIS_MAX_V)
-        this->z = DEF_AXIS_MAX_V;
+    if (z < DEF_AXIS_MIN)
+        this->z = DEF_AXIS_MIN;
+    else if (z > DEF_AXIS_MAX)
+        this->z = DEF_AXIS_MAX;
     else
         this->z = z;
 }

@@ -7,15 +7,9 @@
 #include "PIDController.h"
 #include "RBD_Timer.h"
 
-#define DEF_AXIS_MIN_H -128
-#define DEF_AXIS_MAX_H 127
-#define DEF_AXIS_MIN_V -128
-#define DEF_AXIS_MAX_V 127
-
-/*
 #define DEF_AXIS_MIN -126
 #define DEF_AXIS_MAX 127
-*/
+
 #define V_OFFSET_POWER 80
 
 #define TIME_TO_REACH_MAX 3                                        //seconds
@@ -50,6 +44,15 @@
 
 class Engine
 {
+public:
+    enum PowerMode
+    {
+        SLOW,
+        MEDIUM,
+        FAST
+    };
+
+private:
     const float horizontalPowerPerc[3] = {H_SLOW_POWER, H_MEDIUM_POWER, H_FAST_POWER};
     const float verticalPowerPerc[3] = {V_SLOW_POWER, V_MEDIUM_POWER, V_FAST_POWER};
 
@@ -64,6 +67,8 @@ class Engine
     bool pitchControlEnabled;
 
     long long startTimeForPressure;
+
+    PowerMode powerMode;
 
     Truster frontLeftTruster,
         frontRightTruster,
@@ -112,9 +117,6 @@ public:
 
     bool isStarted();
     bool isPitchControlEnabled();
-
-private:
-    PowerMode powerMode;
 };
 
 #endif //POLITOCEAN_ENGINE_H
