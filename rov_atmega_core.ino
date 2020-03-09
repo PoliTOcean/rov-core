@@ -25,6 +25,13 @@ IMU imu(dt);     // imu sensor
 MS5837 brSensor; // pressure sensor
 RBD::Timer timer;
 
+volatile struct SPIDebug
+{
+    bool enabled = false;
+    bool updated = false;
+    int x = 0, y = 0, z = 0, yaw = 0, pitch = 0;
+} spiDebug;
+
 void setup()
 {
     Serial.begin(9600); // initialize comunication via the serial port
@@ -58,6 +65,8 @@ void setup()
     seno.begin(); //porc
     seno.setWaitForConversion(false);
     seno.requestTemperaturesByIndex(0);
+
+    spiDebug.enabled = false;
 }
 
 void sensorsRead()
@@ -97,6 +106,16 @@ void loop()
         engine.evaluateVertical(currentPressure, imu.pitch, imu.roll);
         // imu.printValues();
         // Serial.println(micros()-now);
+    }
+
+    if (spiDebug.enabled && spiDebug.updated)
+    {
+        Serial.print("X: "), Serial.print(spiDebug.x);
+        Serial.print("\tY: "), Serial.print(spiDebug.y);
+        Serial.print("\tZ: "), Serial.print(spiDebug.z);
+        Serial.print("\tYAW: "), Serial.print(spiDebug.yaw);
+        Serial.print("\tPITCH: "), Serial.println(spiDebug.pitch);
+        spiDebug.updated = false;
     }
 }
 
@@ -176,31 +195,39 @@ ISR(SPI_STC_vect)
         switch (axis)
         {
         case ATMega::Axes::X_AXIS: //  read x
+            if (spiDebug.enabled)
+                spiDebug.x = c - 127;
             engine.setX(c - 127);
             break;
 
         case ATMega::Axes::Y_AXIS: // read y
+            if (spiDebug.enabled)
+                spiDebug.y = c - 127;
             engine.setY(c - 127);
             break;
 
+        case ATMega::Axes::Z_AXIS:
+            if (spiDebug.enabled)
+                spiDebug.z = c - 127;
+            engine.setZ(c - 127);
+
         case ATMega::Axes::RZ_AXIS: //  read rz
+            if (spiDebug.enabled)
+                spiDebug.yaw = c - 127;
             engine.setYaw(c - 127);
             break;
 
-        case ATMega::Axes::UP_AXIS:
-            engine.setUp(c);
-            break;
-
-        case ATMega::Axes::DOWN_AXIS:
-            engine.setDown(c);
-            break;
-
         case ATMega::Axes::PITCH_AXIS:
+            if (spiDebug.enabled)
+                spiDebug.pitch = c - 127;
             engine.setPitchControlPower(c - 127);
             break;
         }
 
-        if (++axis > 5)
+        if (spiDebug.enabled)
+            spiDebug.updated = true;
+
+        if (++axis > 4)
         {
             nextIsAxes = false;
             axis = 0;
