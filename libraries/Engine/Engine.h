@@ -1,10 +1,5 @@
-/**
- * Motors sensor
- * PolitTOcean year 2019
- */
-
-#ifndef POLITOCEAN_MOTORS_H
-#define POLITOCEAN_MOTORS_H
+#ifndef POLITOCEAN_ENGINE_H
+#define POLITOCEAN_ENGINE_H
 
 #include "Truster.h"
 #include "PressureSensor.h"
@@ -12,10 +7,10 @@
 #include "PIDController.h"
 #include "RBD_Timer.h"
 
-#define DEF_AXIS_MIN_H -126
+#define DEF_AXIS_MIN_H -128
 #define DEF_AXIS_MAX_H 127
-#define DEF_AXIS_MIN_V 0
-#define DEF_AXIS_MAX_V 255
+#define DEF_AXIS_MIN_V -128
+#define DEF_AXIS_MAX_V 127
 
 /*
 #define DEF_AXIS_MIN -126
@@ -58,8 +53,7 @@ class Engine
     const float horizontalPowerPerc[3] = {H_SLOW_POWER, H_MEDIUM_POWER, H_FAST_POWER};
     const float verticalPowerPerc[3] = {V_SLOW_POWER, V_MEDIUM_POWER, V_FAST_POWER};
 
-    int x, y, yaw;
-    float up, down;
+    int x, y, yaw, z;
 
     float requestedPressure;
     int pressCount;
@@ -100,10 +94,8 @@ public:
 
     void setX(int x);
     void setY(int y);
+    void setZ(int z);
     void setYaw(int yaw);
-
-    void setUp(int up);
-    void setDown(int down);
 
     void pitchControlOn();
     void pitchControlOff();
@@ -125,4 +117,4 @@ private:
     PowerMode powerMode;
 };
 
-#endif
+#endif //POLITOCEAN_ENGINE_H

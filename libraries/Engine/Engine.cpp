@@ -69,7 +69,7 @@ void Engine::configure()
 //function to evaluate vertical motors values
 void Engine::evaluateVertical(float currentPressure, float roll, float pitch)
 {
-    float pitchPower, rollPower;
+    float pitchPower = 0, rollPower = 0;
     if (!started)
     {
         upperRightTruster.stop();
@@ -79,13 +79,9 @@ void Engine::evaluateVertical(float currentPressure, float roll, float pitch)
     }
 
     //value for up-down movement
-    int valUD = 0;
     float depthCorrectionPower = 0;
-    if (down > 0 || up > 0)
-    {                        //controlled up-down from joystick
+    if (z != 0)
         savePressure = true; //it has to save pressure when finished
-        valUD = (up - down); //fixed value depending on buttons pressed
-    }
     else
     {
         if (savePressure)
@@ -121,9 +117,9 @@ void Engine::evaluateVertical(float currentPressure, float roll, float pitch)
     upperLeftTruster.setOffset(depthCorrectionPower + pitchPower + rollPower);
     upperRightTruster.setOffset(depthCorrectionPower + pitchPower - rollPower);
     upperBackTruster.setOffset(depthCorrectionPower - 2 * pitchPower);
-    upperLeftTruster.setValue(valUD, true);
-    upperRightTruster.setValue(valUD, true);
-    upperBackTruster.setValue(valUD, true);
+    upperLeftTruster.setValue(z, true);
+    upperRightTruster.setValue(z, true);
+    upperBackTruster.setValue(z, true);
 }
 
 void Engine::writeMotors()
@@ -196,19 +192,18 @@ void Engine::stop()
 {
     x = 0;
     y = 0;
+    z = 0;
     yaw = 0;
 
-    up = 0;
-    down = 0;
     started = false;
 }
 
 void Engine::setX(int x)
 {
     if (x < DEF_AXIS_MIN_H)
-        x = DEF_AXIS_MIN_H;
+        this->x = DEF_AXIS_MIN_H;
     else if (x > DEF_AXIS_MAX_H)
-        x = DEF_AXIS_MAX_H;
+        this->x = DEF_AXIS_MAX_H;
     else
         this->x = x;
 }
@@ -216,9 +211,9 @@ void Engine::setX(int x)
 void Engine::setY(int y)
 {
     if (y < DEF_AXIS_MIN_H)
-        y = DEF_AXIS_MIN_H;
+        this->y = DEF_AXIS_MIN_H;
     else if (y > DEF_AXIS_MAX_H)
-        y = DEF_AXIS_MAX_H;
+        this->y = DEF_AXIS_MAX_H;
     else
         this->y = y;
 }
@@ -226,31 +221,21 @@ void Engine::setY(int y)
 void Engine::setYaw(int yaw)
 {
     if (yaw < DEF_AXIS_MIN_H)
-        yaw = DEF_AXIS_MIN_H;
+        this->yaw = DEF_AXIS_MIN_H;
     else if (yaw > DEF_AXIS_MAX_H)
-        yaw = DEF_AXIS_MAX_H;
+        this->yaw = DEF_AXIS_MAX_H;
     else
         this->yaw = yaw;
 }
 
-void Engine::setUp(int up)
+void Engine::setZ(int z)
 {
-    if (up < DEF_AXIS_MIN_V)
-        up = DEF_AXIS_MIN_V;
-    else if (up > DEF_AXIS_MAX_V)
-        up = DEF_AXIS_MAX_V;
+    if (z < DEF_AXIS_MIN_V)
+        this->z = DEF_AXIS_MIN_V;
+    else if (z > DEF_AXIS_MAX_V)
+        this->z = DEF_AXIS_MAX_V;
     else
-        this->up = up;
-}
-
-void Engine::setDown(int down)
-{
-    if (down < DEF_AXIS_MIN_V)
-        down = DEF_AXIS_MIN_V;
-    else if (down > DEF_AXIS_MAX_V)
-        down = DEF_AXIS_MAX_V;
-    else
-        this->down = down;
+        this->z = z;
 }
 
 void Engine::setPower(Engine::PowerMode pwr)
