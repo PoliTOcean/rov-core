@@ -20,10 +20,9 @@ namespace Axes
 {
 const short X_AXIS = 0;
 const short Y_AXIS = 1;
-const short RZ_AXIS = 2;
-const short UP_AXIS = 3;
-const short DOWN_AXIS = 4;
-const short PITCH_AXIS = 5;
+const short Z_AXIS = 2;
+const short RZ_AXIS = 3;
+const short PITCH_AXIS = 4;
 } // namespace Axes
 
 namespace SPI
